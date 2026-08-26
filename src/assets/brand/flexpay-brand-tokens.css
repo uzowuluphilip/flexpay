@@ -1,0 +1,46 @@
+/* FlexPay — Brand Tokens (Indigo Flex direction, locked) */
+
+:root {
+  /* Brand */
+  --fp-lime: #C6F135;
+  --fp-lime-light: #E1FF6B;
+  --fp-lime-gradient: linear-gradient(135deg, #E1FF6B 0%, #C6F135 100%);
+  --fp-violet-accent: #7C3AED;   /* secondary accent — used sparingly for depth/glow only, never for primary CTAs */
+
+  /* Backgrounds */
+  --fp-bg-base: #0B0714;       /* app/page background */
+  --fp-bg-panel: #150F2E;      /* cards, panels */
+  --fp-bg-panel-raised: #1B1440; /* hover / elevated panel */
+  --fp-border: #2A2158;
+
+  /* Text */
+  --fp-text-primary: #F4F1FF;
+  --fp-text-muted: #B8B3D9;
+  --fp-text-faint: #8880B8;
+
+  /* Status */
+  --fp-success: #7ED957;
+  --fp-danger: #FF6B6B;
+  --fp-warning: var(--fp-lime);
+
+  /* Aliases */
+
+  /* Radii */
+  --fp-radius-sm: 10px;
+  --fp-radius-md: 16px;
+  --fp-radius-lg: 24px;
+  --fp-radius-pill: 999px;
+
+  /* Type */
+  --fp-font-display: 'Space Grotesk', sans-serif;
+  --fp-font-body: 'Inter', sans-serif;
+  --fp-font-mono: 'JetBrains Mono', monospace;
+
+  /* Legacy aliases for existing app styles */
+  --font-display: var(--fp-font-display);
+  --font-body: var(--fp-font-body);
+  --font-mono: var(--fp-font-mono);
+  --radius-xl: var(--fp-radius-lg);
+  --radius-lg: var(--fp-radius-md);
+  --radius-md: var(--fp-radius-sm);
+}
