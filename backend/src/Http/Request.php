@@ -14,8 +14,15 @@ final class Request
     public function path(): string
     {
         $uri = $_SERVER['REQUEST_URI'] ?? '/';
-        $withoutQuery = explode('?', $uri, 2)[0];
-        return $withoutQuery ?: '/';
+        $path = parse_url($uri, PHP_URL_PATH) ?: '/';
+        $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+        $scriptDirectory = rtrim(str_replace('\\', '/', dirname($scriptName)), '/');
+
+        if ($scriptDirectory !== '' && $scriptDirectory !== '/' && str_starts_with($path, $scriptDirectory . '/')) {
+            $path = substr($path, strlen($scriptDirectory));
+        }
+
+        return $path === '' ? '/' : $path;
     }
 
     public function json(): array

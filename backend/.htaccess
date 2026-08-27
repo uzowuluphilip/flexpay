@@ -1,0 +1,4 @@
+RewriteEngine On
+
+# Keep application internals and uploaded receipts out of the public URL space
+RewriteRule ^(?:\.env|src(?:/|$)|vendor(?:/|$)|cache(?:/|$)|storage(?:/|$)) - [F,L,NC]

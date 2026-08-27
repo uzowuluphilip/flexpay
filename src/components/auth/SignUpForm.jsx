@@ -40,11 +40,7 @@ function SignUpForm() {
     setServerError('')
     try {
       const result = await signUp({ fullName: values.fullName, email: values.email, password: values.password, referralCode: values.referralCode })
-      if (result.user?.email_verified_at) {
-        navigate('/login')
-      } else {
-        navigate('/verify-email?email=' + encodeURIComponent(values.email))
-      }
+      navigate('/login')
     } catch (error) {
       setServerError(error.message)
     } finally {

@@ -14,7 +14,6 @@ class ComposerStaticInitf63340993050e84d991bb7cdd9e44f20
         '320cde22f66dd4f5d3fd621d3e88b98f' => __DIR__ . '/..' . '/symfony/polyfill-ctype/bootstrap.php',
         '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
         '5897ea0ac4cccf14d323035e65887801' => __DIR__ . '/..' . '/symfony/polyfill-php82/bootstrap.php',
-        '0754989a10baadda533479884b399278' => __DIR__ . '/..' . '/resend/resend-php/src/Resend.php',
     );
 
     public static $prefixLengthsPsr4 = array (
@@ -25,10 +24,6 @@ class ComposerStaticInitf63340993050e84d991bb7cdd9e44f20
             'Symfony\\Polyfill\\Mbstring\\' => 26,
             'Symfony\\Polyfill\\Ctype\\' => 23,
             'SpomkyLabs\\Pki\\' => 15,
-        ),
-        'R' =>
-        array (
-            'Resend\\' => 7,
         ),
         'P' =>
         array (
@@ -87,10 +82,6 @@ class ComposerStaticInitf63340993050e84d991bb7cdd9e44f20
         'SpomkyLabs\\Pki\\' =>
         array (
             0 => __DIR__ . '/..' . '/spomky-labs/pki-framework/src',
-        ),
-        'Resend\\' =>
-        array (
-            0 => __DIR__ . '/..' . '/resend/resend-php/src',
         ),
         'Psr\\Http\\Message\\' =>
         array (

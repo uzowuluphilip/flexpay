@@ -3,7 +3,7 @@ import { Eye, EyeOff } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { signIn } from '../../lib/api/auth'
 import { useAuth } from '../../hooks/useAuth'
 import { hasCompletedOnboarding } from '../../pages/auth/OnboardingPage'
@@ -54,12 +54,11 @@ function SignInForm() {
         {errors.password ? <p className="mt-2 text-sm text-brand-danger">{errors.password.message}</p> : null}
       </div>
 
-      <div className="flex items-center justify-between gap-3 text-sm">
+      <div className="flex items-center justify-start gap-3 text-sm">
         <label className="flex items-center gap-2 text-brand-muted">
           <input type="checkbox" {...register('remember')} className="h-4 w-4 rounded border-brand-border bg-transparent" />
           Remember me
         </label>
-        <Link to="/forgot-password" className="font-semibold text-brand-lime transition hover:text-[#f6c353]">Forgot password?</Link>
       </div>
 
       {serverError ? <div className="rounded-2xl border border-brand-danger/60 bg-brand-danger/10 px-4 py-3 text-sm text-brand-danger">{serverError}</div> : null}

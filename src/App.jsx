@@ -2,9 +2,6 @@ import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-d
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
-import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
-import ResetPasswordPage from './pages/auth/ResetPasswordPage'
-import VerifyEmailPage from './pages/auth/VerifyEmailPage'
 import HomePage from './pages/dashboard/HomePage'
 import AboutPage from './pages/dashboard/AboutPage'
 import InvestPage from './pages/dashboard/InvestPage'
@@ -47,9 +44,6 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/verify-email" element={<VerifyEmailPage />} />
             <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
             <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
             <Route path="/about" element={<ProtectedRoute><AboutPage /></ProtectedRoute>} />

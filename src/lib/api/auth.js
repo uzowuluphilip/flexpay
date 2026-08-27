@@ -86,38 +86,6 @@ export async function signUp(payload) {
   }
 }
 
-export async function forgotPassword(email) {
-  if (!email) {
-    throw new Error('Please provide your email address.')
-  }
-
-  await apiRequest('/api/auth/forgot-password', {
-    method: 'POST',
-    body: { email },
-  })
-
-  return { ok: true }
-}
-
-export async function resetPassword({ email, token, password }) {
-  if (!email || !token) {
-    throw new Error('The reset link is missing its email or token details.')
-  }
-  if (!password) {
-    throw new Error('Please choose a new password.')
-  }
-
-  await apiRequest('/api/auth/reset-password', {
-    method: 'POST',
-    body: {
-      token,
-      new_password: password,
-    },
-  })
-
-  return { ok: true }
-}
-
 export async function getCurrentUser() {
   const token = getStoredToken()
   if (!token) {

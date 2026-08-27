@@ -55,7 +55,7 @@ CREATE TABLE users (
   CONSTRAINT fk_users_referred_by FOREIGN KEY (referred_by_user_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Email verification tokens (sent via Resend)
+-- Legacy email verification tokens (unused; retained for existing databases)
 CREATE TABLE email_verifications (
   id           BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id      BIGINT UNSIGNED NOT NULL,
@@ -67,7 +67,7 @@ CREATE TABLE email_verifications (
   CONSTRAINT fk_email_verifications_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Password reset tokens (sent via Resend)
+-- Legacy password reset tokens (unused; retained for existing databases)
 CREATE TABLE password_resets (
   id          BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id     BIGINT UNSIGNED NOT NULL,
@@ -334,14 +334,14 @@ CREATE TABLE admin_sessions (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ------------------------------------------------------------
--- EMAIL LOG (every send through Resend, for admin visibility/debugging)
+-- Legacy email log (unused; retained for existing databases)
 -- ------------------------------------------------------------
 CREATE TABLE email_log (
   id           BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id      BIGINT UNSIGNED NULL,
   type         ENUM('email_verification','password_reset','withdrawal_update','referral_bonus','other') NOT NULL,
   recipient    VARCHAR(190)    NOT NULL,
-  resend_id    VARCHAR(100)    NULL COMMENT 'id returned by the Resend API',
+  provider_id  VARCHAR(100)    NULL COMMENT 'optional external provider message id',
   status       ENUM('sent','failed','logged_not_sent') NOT NULL DEFAULT 'sent',
   subject      VARCHAR(255)    NULL,
   content_text TEXT            NULL,

@@ -49,10 +49,6 @@ $router->add('POST', '/api/auth/register', [AuthController::class, 'register']);
 $router->add('POST', '/api/auth/login', [AuthController::class, 'login']);
 $router->add('POST', '/api/auth/logout', [AuthController::class, 'logout']);
 $router->add('GET', '/api/auth/me', [AuthController::class, 'me']);
-$router->add('POST', '/api/auth/verify-email', [AuthController::class, 'verifyEmail']);
-$router->add('POST', '/api/auth/resend-verification', [AuthController::class, 'resendVerification']);
-$router->add('POST', '/api/auth/forgot-password', [AuthController::class, 'forgotPassword']);
-$router->add('POST', '/api/auth/reset-password', [AuthController::class, 'resetPassword']);
 
 $router->add('GET', '/api/wallet/summary', [WalletController::class, 'summary']);
 $router->add('GET', '/api/wallet/withdraw-progress', [WalletController::class, 'withdrawProgress']);

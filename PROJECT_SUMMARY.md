@@ -210,7 +210,6 @@ backend/src/Repositories/ReferralRepository.php
 backend/src/Repositories/SessionRepository.php
 backend/src/Repositories/UserRepository.php
 backend/src/Repositories/WalletRepository.php
-backend/src/Services/MailService.php
 backend/src/Services/NotificationService.php
 backend/src/Services/PasswordService.php
 backend/src/Services/TokenService.php
@@ -510,9 +509,6 @@ Extracted from `src/App.jsx` using `Select-String`:
 /                         LandingPage                         public
 /login                    LoginPage                           public
 /register                 RegisterPage                        public
-/forgot-password          ForgotPasswordPage                  public
-/reset-password           ResetPasswordPage                   public
-/verify-email             VerifyEmailPage                     public
 /onboarding               OnboardingPage                      protected
 /home                     HomePage                            protected
 /about                    AboutPage                           protected
@@ -552,10 +548,6 @@ POST /api/auth/register
 POST /api/auth/login
 POST /api/auth/logout
 GET  /api/auth/me
-POST /api/auth/verify-email
-POST /api/auth/resend-verification
-POST /api/auth/forgot-password
-POST /api/auth/reset-password
 GET  /api/wallet/summary
 GET  /api/wallet/withdraw-progress
 GET  /api/exchange-rate
@@ -613,10 +605,7 @@ Environment access was searched across current source, excluding dependencies/bu
 | `DB_NAME` | `Config/Database.php` | MySQL database name | yes, backend example |
 | `DB_USER` | `Config/Database.php` | MySQL user | yes, backend example |
 | `DB_PASSWORD` | `Config/Database.php` | MySQL password | yes, backend example |
-| `REQUIRE_EMAIL_VERIFICATION` | `AuthController.php` | Enables/disables required email verification | yes, backend example |
-| `RESEND_API_KEY` | `MailService.php` | Resend email provider credential | yes, backend example |
-| `MAIL_FROM` | `AuthController.php`, `MailService.php` | Sender identity | yes, backend example |
-| `APP_ENV` | `MailService.php`, test code via `getenv()` | Local/production email behavior | no, backend example drift |
+| `APP_ENV` | backend configuration and test code via `getenv()` | Application environment | yes, backend example |
 | `VAPID_PUBLIC_KEY` | `NotificationService.php` | Server-side push public key | yes, backend example |
 | `VAPID_PRIVATE_KEY` | `NotificationService.php` | Server-side push private key | yes, backend example |
 | `VAPID_SUBJECT` | `NotificationService.php` | Web push contact subject | yes, backend example |
@@ -642,7 +631,7 @@ Status is based on current source inspection and the real HTTP/database checks a
 | Feature | Current status | Evidence and limits |
 |---|---|---|
 | Auth | Real and database-wired | Auth controller, users, password hashes, separate user sessions, login/logout/me routes. Real registration/login flows have been exercised. |
-| Email verification | Real but feature-flag dependent | Verification tokens are hashed and stored in `email_verifications`; verify/resend routes and mail service exist. Current live `REQUIRE_EMAIL_VERIFICATION=false`, so new local users are marked verified without completing the email flow. |
+| Email verification | Removed | New accounts are marked verified during registration. Email verification and password-reset delivery are not part of the current release. Legacy email tables may remain in existing databases but are unused. |
 | Wallet and balances | Real and database-wired | `transactions` is the source for balance calculation; wallet balance is synchronized. Amounts are integer kobo. |
 | Daily check-in | Real and database-wired | `/api/wallet/checkin` writes `check_ins`, `check_in_bonus` transactions, activity rows, and synchronizes balance. All seven days are currently flat ₦500. A previous PHP/MySQL date mismatch was fixed by using MySQL `CURDATE()` for streak calculations. |
 | Daily claims | Real and database-wired | `/api/wallet/claim-reward` writes `daily_claims`, `task_reward`, activity rows, and synchronizes balance. Current policy is one claim per database day at ₦4,000. Live HTTP verification returned ₦4,000, rejected a second same-day claim with HTTP 400, and recorded one 400,000-kobo transaction. Schema default still says 30, as noted above. |
@@ -657,7 +646,7 @@ Status is based on current source inspection and the real HTTP/database checks a
 | Push notifications | Partially real | Browser prompt and subscribe/unsubscribe routes, subscription table, VAPID server service, and notification calls exist. Delivery depends on valid configured keys and an actual subscribed browser; not every push delivery was independently verified in this audit. |
 | Spin Arena | Real server outcome, partially static UI | `/api/spin/play` validates stake and balance, randomly returns win/try_again/lose, writes `spins`, transactions, activity, and syncs wallet. Live HTTP tests confirmed win adds payout, Try Again leaves balance unchanged, and Lose deducts stake. UI counters, leaderboards, and history tabs remain static/coming-soon. |
 | Currency toggle | Real display-only behavior | Frontend stores display preference and calls exchange-rate API; display conversion does not alter Naira backend values. It is not a balance currency conversion. |
-| Email-verification flag | Real configuration switch | `REQUIRE_EMAIL_VERIFICATION` is read by registration; current live local value is false. |
+| Email-verification flag | Removed | `REQUIRE_EMAIL_VERIFICATION` is no longer read by the application. |
 | Payment Status | Real activity feed, limited to positive credits | `/status` calls `/api/wallet/activity`, filters positive credit rows, and displays completed labels. Live HTTP checks showed ₦500 check-in, ₦4,000 claim, and ₦15,000 referral activity. It intentionally hides welcome bonus and all debits. |
 
 ## Decisions or Work Not Reflected in `CLAUDE.md`

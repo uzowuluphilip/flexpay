@@ -1,5 +1,10 @@
 # InfinityFree Backend Deployment
 
+For this project:
+
+- Frontend: `https://flexpay-theta.vercel.app`
+- Backend domain: `https://flexpay.kesug.com`
+
 This backend is plain PHP with MySQL and can be hosted on InfinityFree if the host provides PHP 8.1+ and the required Composer extensions. The frontend remains a separate Vercel deployment.
 
 ## 1. Create the database
@@ -13,7 +18,7 @@ The export is schema-only. It does not contain local users, wallets, transaction
 
 ## 2. Upload the backend
 
-Use an API subdomain or separate backend document root if the hosting panel supports it. The configured document root must point to `backend/public`, because that directory contains `index.php` and `.htaccess`.
+Use an API subdomain or separate backend document root if the hosting panel supports it. The configured document root should point to `backend/public`, because that directory contains `index.php` and the API rewrite rules.
 
 The PHP process must be able to read these sibling directories from that document root:
 
@@ -26,7 +31,7 @@ backend/storage/topup-receipts/
 backend/.env
 ```
 
-If InfinityFree only allows `htdocs` as the document root, preserve the backend directory layout and configure the API base URL to include the path that reaches `public/index.php`; do not expose `.env`, `src`, or `vendor` as downloadable static files.
+If InfinityFree only allows `htdocs` as the document root, upload the `backend` directory below `htdocs` and configure the API base URL to include `/backend/public` (or the path created by your host). Keep the root `backend/.htaccess` in place: it blocks `.env`, `src`, `vendor`, `cache`, and `storage` from public requests. Do not expose those directories as downloadable static files.
 
 ## 3. Configure `backend/.env`
 
@@ -38,11 +43,8 @@ DB_HOST=the-hostname-from-infinityfree
 DB_NAME=the-database-name-from-infinityfree
 DB_USER=the-database-user-from-infinityfree
 DB_PASSWORD=the-database-password-from-infinityfree
-FRONTEND_URL=https://your-vercel-project.vercel.app
-ALLOWED_ORIGINS=https://your-vercel-project.vercel.app
-REQUIRE_EMAIL_VERIFICATION=true
-RESEND_API_KEY=your-real-resend-key
-MAIL_FROM="FlexPay <your-verified-sender@example.com>"
+FRONTEND_URL=https://flexpay-theta.vercel.app
+ALLOWED_ORIGINS=https://flexpay-theta.vercel.app
 TOPUP_BANK_NAME=Moniepoint MFB
 TOPUP_ACCOUNT_NUMBER=5289340156
 TOPUP_ACCOUNT_NAME="Divine Kelechi Christopher"
@@ -53,22 +55,28 @@ VAPID_SUBJECT=mailto:your-real-contact@example.com
 
 `ALLOWED_ORIGINS` is a comma-separated exact-origin allowlist. Include the Vercel preview origin only when needed. Do not use `*`, because the API uses credentialed requests.
 
+Email verification and password-reset email are not part of this release. New accounts are activated immediately after registration. Password recovery must be handled manually by an administrator until a non-email recovery flow is implemented.
+
+Before uploading either application, rotate any private VAPID keys that have ever been stored in a local `.env` file or shared outside the deployment secret store. Production secrets belong only in the server environment; never commit `.env` files.
+
 ## 4. Deploy the frontend on Vercel
 
-Set the Vercel project environment variable to the InfinityFree API domain:
+Set the Vercel project environment variable to the InfinityFree API domain. If `backend` is uploaded below InfinityFree's `htdocs`, use:
 
 ```text
-VITE_API_URL=https://flexpay.kesug.com
+VITE_API_URL=https://flexpay.kesug.com/backend/public
 ```
 
-Use `npm run build` and `dist` as the output directory. Add a Vercel SPA rewrite so direct routes such as `/home`, `/upgrade`, and `/status` resolve to `index.html`.
+If the InfinityFree domain document root is configured directly to `backend/public`, use `https://flexpay.kesug.com` without `/backend/public`.
+
+Use `npm run build` and `dist` as the output directory. The repository includes `vercel.json`, which rewrites direct routes such as `/home`, `/upgrade`, and `/status` to `index.html`. Confirm the deployed project is connected to this repository and redeploy after pulling that file.
 
 ## 5. Verify after deployment
 
-Run a real preflight request from the deployed frontend origin and confirm the literal response header:
+Run a real preflight request from the deployed frontend origin and confirm the literal response header. For the current `/flexpay/backend/public` upload path:
 
 ```powershell
-curl.exe -i -X OPTIONS https://flexpay.kesug.com/api/auth/login `
+curl.exe -i -X OPTIONS https://flexpay.kesug.com/flexpay/backend/public/api/auth/login `
   -H "Origin: https://your-vercel-project.vercel.app" `
   -H "Access-Control-Request-Method: POST" `
   -H "Access-Control-Request-Headers: Content-Type, Authorization"
@@ -81,6 +89,15 @@ Access-Control-Allow-Origin: https://your-vercel-project.vercel.app
 ```
 
 Then test registration/login and one read-only authenticated endpoint such as `/api/wallet/summary` from the deployed browser. Do not call money-moving endpoints in production merely to smoke-test deployment.
+
+Also verify these release conditions:
+
+- The frontend root and a direct route both return the FlexPay app, not a provider placeholder or `404`.
+- The API root responds from the uploaded backend, not a hosting-provider welcome page.
+- The preflight response contains the exact deployed frontend origin and does not use `*`.
+- Registration/login works from the deployed browser, followed by one authenticated read-only request.
+- `backend/storage/topup-receipts` is writable by PHP but cannot be fetched directly over HTTP.
+- Production `.env` uses `APP_ENV=production`, and all bank, database, and push values are real production values.
 
 ## InfinityFree cautions
 
