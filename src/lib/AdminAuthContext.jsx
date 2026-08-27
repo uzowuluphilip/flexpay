@@ -63,7 +63,7 @@ export const AdminAuthProvider = ({ children }) => {
       try {
         const response = await fetch(`${API_BASE}/api/admin/login`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
           body: JSON.stringify({ email, password }),
         });
 

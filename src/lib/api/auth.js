@@ -1,9 +1,10 @@
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 async function apiRequest(path, { method = 'GET', body, token = null } = {}) {
-  const headers = {
-    'Content-Type': 'application/json',
-  }
+  const headers = {}
+
+  // InfinityFree challenges CORS preflight requests; text/plain keeps public auth requests simple.
+  if (body) headers['Content-Type'] = 'text/plain;charset=UTF-8'
 
   if (token) {
     headers.Authorization = `Bearer ${token}`

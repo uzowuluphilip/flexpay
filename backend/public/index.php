@@ -2,6 +2,28 @@
 
 declare(strict_types=1);
 
+$allowedOrigins = [
+    'https://flexpay-theta.vercel.app',
+    'http://localhost:5173',
+    'http://localhost',
+];
+
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+
+if (in_array($origin, $allowedOrigins, true)) {
+    header('Access-Control-Allow-Origin: ' . $origin);
+}
+
+header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+header('Access-Control-Allow-Credentials: true');
+header('Vary: Origin');
+
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
+    http_response_code(204);
+    exit;
+}
+
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use Dotenv\Dotenv;
@@ -17,30 +39,6 @@ use FlexPay\Http\Router;
 
 $dotenv = Dotenv::createImmutable(__DIR__ . '/..');
 $dotenv->safeLoad();
-
-$frontEndUrl = rtrim((string) ($_ENV['FRONTEND_URL'] ?? 'http://localhost:5173'), '/');
-$allowedOrigins = array_values(array_filter(array_map('trim', explode(',', (string) ($_ENV['ALLOWED_ORIGINS'] ?? $frontEndUrl)))));
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-$effectiveOrigin = '';
-
-if ($origin === '') {
-    $effectiveOrigin = $frontEndUrl;
-} elseif (in_array($origin, $allowedOrigins, true)) {
-    $effectiveOrigin = $origin;
-}
-
-if ($effectiveOrigin !== '') {
-    header('Access-Control-Allow-Origin: ' . $effectiveOrigin);
-}
-header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
-header('Access-Control-Allow-Credentials: true');
-header('Vary: Origin');
-
-if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
-    http_response_code(204);
-    exit;
-}
 
 Database::getInstance();
 

@@ -1,5 +1,18 @@
 RewriteEngine On
 
+# Ensure InfinityFree's Apache layer includes CORS headers on preflight responses.
+<IfModule mod_headers.c>
+	Header always unset Access-Control-Allow-Origin
+	Header always set Access-Control-Allow-Origin "https://flexpay-theta.vercel.app"
+	Header always set Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+	Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+	Header always set Access-Control-Allow-Credentials "true"
+	Header always set Vary "Origin"
+</IfModule>
+
+RewriteCond %{REQUEST_METHOD} ^OPTIONS$
+RewriteRule ^api(?:/|$) index.php [QSA,L]
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ index.php [QSA,L]
