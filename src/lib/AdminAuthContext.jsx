@@ -15,7 +15,7 @@ export const AdminAuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const API_BASE_URL = import.meta.env.VITE_API_URL || '/flexpay/backend/public';
 
   // Check if user is already logged in on mount
   useEffect(() => {
@@ -30,7 +30,7 @@ export const AdminAuthProvider = ({ children }) => {
 
   const verifyToken = useCallback(async (adminToken) => {
     try {
-      const response = await fetch(`${API_BASE}/api/admin/me`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/me`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -55,13 +55,13 @@ export const AdminAuthProvider = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [API_BASE]);
+  }, [API_BASE_URL]);
 
   const login = useCallback(
     async (email, password) => {
       setIsLoading(true);
       try {
-        const response = await fetch(`${API_BASE}/api/admin/login`, {
+        const response = await fetch(`${API_BASE_URL}/api/admin/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
           body: JSON.stringify({ email, password }),
@@ -84,14 +84,14 @@ export const AdminAuthProvider = ({ children }) => {
         setIsLoading(false);
       }
     },
-    [API_BASE]
+    [API_BASE_URL]
   );
 
   const logout = useCallback(async () => {
     setIsLoading(true);
     try {
       if (token) {
-        await fetch(`${API_BASE}/api/admin/logout`, {
+        await fetch(`${API_BASE_URL}/api/admin/logout`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -107,7 +107,7 @@ export const AdminAuthProvider = ({ children }) => {
       setAdmin(null);
       setIsLoading(false);
     }
-  }, [token, API_BASE]);
+  }, [token, API_BASE_URL]);
 
   const value = {
     admin,

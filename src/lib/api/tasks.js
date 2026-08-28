@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/flexpay/backend/public'
 
 function getStoredToken() {
   if (typeof window === 'undefined') return null
@@ -13,7 +13,7 @@ async function apiRequest(path, { method = 'GET', body, token = null } = {}) {
     headers.Authorization = `Bearer ${authToken}`
   }
 
-  const response = await fetch(`${API_BASE}${path}`, {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,

@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/flexpay/backend/public';
 
 const getAdminToken = () => localStorage.getItem('admin-token');
 
@@ -13,7 +13,7 @@ const apiFetch = async (endpoint, options = {}) => {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE}${endpoint}`, {
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
     headers,
   });
@@ -70,9 +70,9 @@ export const adminApi = {
       method: 'POST',
       body: JSON.stringify({ reason }),
     }),
-  receiptUrl: (receiptId) => `${API_BASE}/api/admin/topups/${receiptId}/receipt`,
+  receiptUrl: (receiptId) => `${API_BASE_URL}/api/admin/topups/${receiptId}/receipt`,
   fetchReceipt: async (receiptId) => {
-    const response = await fetch(`${API_BASE}/api/admin/topups/${receiptId}/receipt`, {
+    const response = await fetch(`${API_BASE_URL}/api/admin/topups/${receiptId}/receipt`, {
       headers: { Authorization: `Bearer ${getAdminToken()}` },
     })
     if (!response.ok) throw new Error('Receipt could not be loaded.')

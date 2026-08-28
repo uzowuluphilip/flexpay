@@ -1,7 +1,7 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/flexpay/backend/public'
 
 export async function savePushSubscription(subscription, token) {
-  const response = await fetch(`${API_BASE}/api/notifications/subscribe`, {
+  const response = await fetch(`${API_BASE_URL}/api/notifications/subscribe`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
