@@ -1,5 +1,5 @@
 RewriteEngine On
-RewriteBase /flexpay/
+RewriteBase /
 
 # Do not rewrite backend requests
 RewriteRule ^backend/ - [L]
@@ -10,4 +10,4 @@ RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
 # React SPA fallback
-RewriteRule . /flexpay/index.html [L]
+RewriteRule . /index.html [L]

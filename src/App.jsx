@@ -38,7 +38,7 @@ function App() {
   return (
     <AuthProvider>
       <AdminAuthProvider>
-        <Router basename="/flexpay">
+        <Router>
         <RouteTransitionLayout>
           <Routes>
             <Route path="/" element={<LandingPage />} />

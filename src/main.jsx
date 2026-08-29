@@ -5,7 +5,7 @@ import App from './App.jsx'
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/flexpay/sw.js').catch(() => {})
+    navigator.serviceWorker.register('/sw.js').catch(() => {})
   }, { once: true })
 }
 
