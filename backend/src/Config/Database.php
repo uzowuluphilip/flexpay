@@ -20,11 +20,11 @@ final class Database
         $dotenv = Dotenv::createImmutable($rootPath);
         $dotenv->safeLoad();
 
-        $host = $_ENV['DB_HOST'] ?? '127.0.0.1';
-        $port = $_ENV['DB_PORT'] ?? '3306';
-        $dbname = $_ENV['DB_NAME'] ?? 'flexpay';
-        $user = $_ENV['DB_USER'] ?? 'root';
-        $password = $_ENV['DB_PASSWORD'] ?? '';
+        $host = $_SERVER['DB_HOST'] ?? $_ENV['DB_HOST'] ?? '127.0.0.1';
+        $port = $_SERVER['DB_PORT'] ?? $_ENV['DB_PORT'] ?? '3306';
+        $dbname = $_SERVER['DB_NAME'] ?? $_ENV['DB_NAME'] ?? 'flexpay';
+        $user = $_SERVER['DB_USER'] ?? $_ENV['DB_USER'] ?? 'root';
+        $password = $_SERVER['DB_PASSWORD'] ?? $_ENV['DB_PASSWORD'] ?? '';
 
         $dsn = sprintf(
             'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
