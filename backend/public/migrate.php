@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-require __DIR__ . '/vendor/autoload.php';
+require dirname(__DIR__) . '/vendor/autoload.php';
 
 use Dotenv\Dotenv;
 use PDO;
-use PDOException;
+use Throwable;
 
-$rootPath = __DIR__;
+$rootPath = dirname(__DIR__);
 
 $dotenv = Dotenv::createImmutable($rootPath);
 $dotenv->safeLoad();
@@ -31,7 +31,7 @@ try {
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     ]);
 
-    $schemaPath = __DIR__ . '/database/schema.sql';
+    $schemaPath = dirname(__DIR__) . '/database/schema.sql';
 
     if (!file_exists($schemaPath)) {
         throw new RuntimeException('schema.sql not found at: ' . $schemaPath);
