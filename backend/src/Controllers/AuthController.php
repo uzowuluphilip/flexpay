@@ -12,6 +12,7 @@ use FlexPay\Repositories\SessionRepository;
 use FlexPay\Repositories\UserRepository;
 use FlexPay\Repositories\WalletRepository;
 use FlexPay\Services\PasswordService;
+use FlexPay\Services\TokenService;
 use PDO;
 
 final class AuthController
