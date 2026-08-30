@@ -21,11 +21,17 @@ final class Database
         $dotenv->safeLoad();
 
         $host = $_ENV['DB_HOST'] ?? '127.0.0.1';
+        $port = $_ENV['DB_PORT'] ?? '3306';
         $dbname = $_ENV['DB_NAME'] ?? 'flexpay';
         $user = $_ENV['DB_USER'] ?? 'root';
         $password = $_ENV['DB_PASSWORD'] ?? '';
 
-        $dsn = sprintf('mysql:host=%s;dbname=%s;charset=utf8mb4', $host, $dbname);
+        $dsn = sprintf(
+            'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
+            $host,
+            $port,
+            $dbname
+        );
 
         $options = [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
