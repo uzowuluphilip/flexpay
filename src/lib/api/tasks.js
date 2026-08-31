@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/flexpay/backend/public'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://flexpay-production-348e.up.railway.app'
 
 function getStoredToken() {
   if (typeof window === 'undefined') return null

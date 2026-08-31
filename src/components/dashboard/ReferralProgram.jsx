@@ -70,7 +70,7 @@ function ReferralProgram() {
             <p className="text-[11px] uppercase tracking-[0.28em] text-brand-muted">Your Link</p>
             <p className="mt-2 break-all font-mono text-sm text-brand-text">{referralInfo?.link || 'https://flexpay-theta.vercel.app/'}</p>
           </div>
-          <button onClick={() => copyText(referralInfo?.link || '')} className="rounded-full border border-brand-border/70 bg-[rgba(198,241,53,0.08)] p-2.5 text-brand-lime">
+          <button onClick={() => copyText('https://flexpay-theta.vercel.app/')} className="rounded-full border border-brand-border/70 bg-[rgba(198,241,53,0.08)] p-2.5 text-brand-lime">
             <Copy size={16} />
           </button>
         </div>

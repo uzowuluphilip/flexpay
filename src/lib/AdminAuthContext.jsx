@@ -15,7 +15,7 @@ export const AdminAuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const API_BASE_URL = import.meta.env.VITE_API_URL || '/flexpay/backend/public';
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://flexpay-production-348e.up.railway.app';
 
   // Check if user is already logged in on mount
   useEffect(() => {

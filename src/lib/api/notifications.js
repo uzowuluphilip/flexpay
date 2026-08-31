@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/flexpay/backend/public'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://flexpay-production-348e.up.railway.app'
 
 export async function savePushSubscription(subscription, token) {
   const response = await fetch(`${API_BASE_URL}/api/notifications/subscribe`, {
