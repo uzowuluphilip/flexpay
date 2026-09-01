@@ -181,7 +181,16 @@ function HomePage() {
           </div>
           <div className="flex items-center gap-2">
             <CurrencyDisplayToggle exchangeRate={exchangeRate} value={displayCurrency} onChange={setDisplayCurrency} />
-            <button className="relative rounded-full border border-brand-border/70 bg-[rgba(198,241,53,0.08)] p-2.5 text-brand-lime">
+            <button
+              type="button"
+              aria-label="Open notification prompt"
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('flexpay-open-notification-prompt'))
+                }
+              }}
+              className="relative rounded-full border border-brand-border/70 bg-[rgba(198,241,53,0.08)] p-2.5 text-brand-lime transition hover:border-brand-lime/60 hover:text-brand-lime"
+            >
               <Bell size={18} />
               <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-[#ff8158]" />
             </button>

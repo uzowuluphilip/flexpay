@@ -33,16 +33,31 @@ function NotificationPrompt() {
       }
     }
 
-    if (window.sessionStorage.getItem(sessionKey)) return
+    const handlePromptOpen = () => {
+      window.sessionStorage.setItem(sessionKey, '1')
+      setVisible(true)
+    }
+
+    window.addEventListener('flexpay-open-notification-prompt', handlePromptOpen)
+
+    if (window.sessionStorage.getItem(sessionKey)) return () => {
+      window.removeEventListener('flexpay-open-notification-prompt', handlePromptOpen)
+    }
 
     const dismissedAt = Number(window.localStorage.getItem(dismissalKey) || 0)
-    if (Date.now() - dismissedAt < dismissalPeriod) return
+    if (Date.now() - dismissedAt < dismissalPeriod) return () => {
+      window.removeEventListener('flexpay-open-notification-prompt', handlePromptOpen)
+    }
 
     const timer = window.setTimeout(() => {
       window.sessionStorage.setItem(sessionKey, '1')
       setVisible(true)
     }, 300)
-    return () => window.clearTimeout(timer)
+
+    return () => {
+      window.clearTimeout(timer)
+      window.removeEventListener('flexpay-open-notification-prompt', handlePromptOpen)
+    }
   }, [token, supportsPush])
 
   const dismiss = () => {
