@@ -213,8 +213,33 @@ export async function getInvestLocks() {
   return Array.isArray(data.locks) ? data.locks : []
 }
 
+const DEFAULT_TOPUP_CONFIG = {
+  bankName: 'Moniepoint MFB',
+  accountNumber: '5289340156',
+  accountName: 'Divine Kelechi Christopher',
+  feeRate: 0.02,
+  minAmount: 100,
+  maxAmount: 500000,
+  verificationTimeframe: 'a few hours',
+}
+
 export async function getTopupConfig(token = null) {
-  return apiRequest('/api/wallet/topup-config', { token })
+  try {
+    const data = await apiRequest('/api/wallet/topup-config', { token })
+    return {
+      ...DEFAULT_TOPUP_CONFIG,
+      ...data,
+      bankName: data?.bankName || data?.bank_name || DEFAULT_TOPUP_CONFIG.bankName,
+      accountNumber: data?.accountNumber || data?.account_number || DEFAULT_TOPUP_CONFIG.accountNumber,
+      accountName: data?.accountName || data?.account_name || DEFAULT_TOPUP_CONFIG.accountName,
+      feeRate: Number(data?.feeRate ?? data?.fee_rate ?? DEFAULT_TOPUP_CONFIG.feeRate),
+      minAmount: Number(data?.minAmount ?? data?.min_amount ?? DEFAULT_TOPUP_CONFIG.minAmount),
+      maxAmount: Number(data?.maxAmount ?? data?.max_amount ?? DEFAULT_TOPUP_CONFIG.maxAmount),
+      verificationTimeframe: data?.verificationTimeframe || data?.verification_timeframe || DEFAULT_TOPUP_CONFIG.verificationTimeframe,
+    }
+  } catch (error) {
+    return { ...DEFAULT_TOPUP_CONFIG }
+  }
 }
 
 export async function submitTopupReceipt(amount, file, token = null) {

@@ -580,10 +580,14 @@ final class WalletController
     {
         $user = $this->requireUser($request);
 
+        $bankName = trim((string) ($_ENV['TOPUP_BANK_NAME'] ?? '')) ?: 'Moniepoint MFB';
+        $accountNumber = trim((string) ($_ENV['TOPUP_ACCOUNT_NUMBER'] ?? '')) ?: '5289340156';
+        $accountName = trim((string) ($_ENV['TOPUP_ACCOUNT_NAME'] ?? '')) ?: 'Divine Kelechi Christopher';
+
         Response::success([
-            'bankName' => (string) ($_ENV['TOPUP_BANK_NAME'] ?? ''),
-            'accountNumber' => (string) ($_ENV['TOPUP_ACCOUNT_NUMBER'] ?? ''),
-            'accountName' => (string) ($_ENV['TOPUP_ACCOUNT_NAME'] ?? ''),
+            'bankName' => $bankName,
+            'accountNumber' => $accountNumber,
+            'accountName' => $accountName,
             'feeRate' => 0.02,
             'minAmount' => 100,
             'maxAmount' => 500000,

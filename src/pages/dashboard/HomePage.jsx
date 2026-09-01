@@ -28,6 +28,23 @@ function HomePage() {
   const [checkingIn, setCheckingIn] = useState(false)
   const [claiming, setClaiming] = useState(false)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+  const [profilePhoto, setProfilePhoto] = useState(() => {
+    if (typeof window === 'undefined') return null
+    return window.localStorage.getItem('flexpay-profile-photo') || null
+  })
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const handleStorageChange = (event) => {
+      if (event.key === 'flexpay-profile-photo') {
+        setProfilePhoto(event.newValue)
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -154,8 +171,8 @@ function HomePage() {
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-3 py-4 sm:px-5 lg:px-8 lg:py-6">
         <header className="flex items-center justify-between rounded-[1.5rem] border border-brand-border/70 bg-[rgba(21,15,46,0.92)] px-4 py-3 shadow-[0_16px_42px_rgba(0,0,0,0.22)] sm:px-5">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-brand-lime to-[#fbdc8b] text-lg font-semibold text-brand-base">
-              {session?.name?.[0] || 'F'}
+            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-brand-lime to-[#fbdc8b] text-lg font-semibold text-brand-base">
+              {profilePhoto ? <img src={profilePhoto} alt="Profile" className="h-full w-full object-cover" /> : session?.name?.[0] || 'F'}
             </div>
             <div>
               <p className="text-sm text-brand-muted">{greeting}</p>
