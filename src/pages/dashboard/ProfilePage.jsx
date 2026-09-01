@@ -13,6 +13,26 @@ function formatDate(value) {
   return date.toLocaleDateString('en-GB')
 }
 
+function playToggleSound(enabled) {
+  if (!enabled || typeof window === 'undefined') return
+  const AudioContext = window.AudioContext || window.webkitAudioContext
+  if (!AudioContext) return
+
+  const audioContext = new AudioContext()
+  const oscillator = audioContext.createOscillator()
+  const gain = audioContext.createGain()
+  oscillator.frequency.value = 640
+  oscillator.type = 'sine'
+  gain.gain.setValueAtTime(0.0001, audioContext.currentTime)
+  gain.gain.exponentialRampToValueAtTime(0.06, audioContext.currentTime + 0.01)
+  gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.12)
+  oscillator.connect(gain)
+  gain.connect(audioContext.destination)
+  oscillator.start()
+  oscillator.stop(audioContext.currentTime + 0.12)
+  oscillator.addEventListener('ended', () => audioContext.close(), { once: true })
+}
+
 function ProfilePage() {
   const { session, logout } = useAuth()
   const navigate = useNavigate()
@@ -206,11 +226,14 @@ function ProfilePage() {
                   <Moon size={18} />
                   <p className="text-sm font-semibold text-brand-text">Theme</p>
                 </div>
-                <p className="mt-1 text-sm text-brand-muted">Dark mode</p>
+                <p className="mt-1 text-sm text-brand-muted">{themeEnabled ? 'Dark mode' : 'Light mode'}</p>
               </div>
               <button
                 type="button"
-                onClick={() => setThemeEnabled((value) => !value)}
+                onClick={() => {
+                  setThemeEnabled((value) => !value)
+                  playToggleSound(soundsEnabled)
+                }}
                 className={`relative inline-flex h-8 w-14 items-center rounded-full border ${themeEnabled ? 'border-brand-lime bg-brand-lime/20' : 'border-brand-border/70 bg-[rgba(198,241,53,0.08)]'}`}
                 aria-label="Toggle dark mode"
               >
@@ -227,7 +250,10 @@ function ProfilePage() {
               </div>
               <button
                 type="button"
-                onClick={() => setSoundsEnabled((value) => !value)}
+                onClick={() => {
+                  playToggleSound(soundsEnabled)
+                  setSoundsEnabled((value) => !value)
+                }}
                 className={`relative inline-flex h-8 w-14 items-center rounded-full border ${soundsEnabled ? 'border-brand-lime bg-brand-lime/20' : 'border-brand-border/70 bg-[rgba(198,241,53,0.08)]'}`}
                 aria-label="Toggle sounds"
               >

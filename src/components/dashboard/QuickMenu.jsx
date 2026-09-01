@@ -62,7 +62,7 @@ function QuickMenu({ open, onClose }) {
             transition={{ type: 'spring', damping: 22, stiffness: 260, mass: 0.95 }}
           >
             <div className="mx-auto mb-0 w-full sm:mb-0">
-              <div className="rounded-t-2xl bg-[rgba(11,7,20,0.96)] p-4 sm:rounded-2xl sm:p-6">
+              <div className="max-h-[85vh] overflow-y-auto rounded-t-2xl bg-[rgba(11,7,20,0.96)] p-4 sm:rounded-2xl sm:p-6">
                 <div className="flex items-center justify-between">
                   <div className="hidden sm:block" />
                   <div className="mx-auto text-center">
