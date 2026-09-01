@@ -15,7 +15,7 @@ function makeActivity(index) {
 }
 
 const activities = Array.from({ length: names.length }, (_, index) => makeActivity(index))
-const notificationDelays = [2 * 60 * 1000, 3 * 60 * 1000, 5 * 60 * 1000]
+const notificationDelays = [30 * 1000, 45 * 1000, 60 * 1000]
 const notificationVisibleDuration = 4200
 
 function formatAmount(amount) {

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, Camera, CalendarDays, CheckCircle2, ChevronRight, Hash, LogOut, Mail, Moon, Settings2, User, Users, Volume2 } from 'lucide-react'
+import { ArrowLeft, Camera, CalendarDays, CheckCircle2, ChevronRight, Hash, LogOut, Mail, Moon, Settings2, Trash2, User, Users, Volume2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import BottomNav from '../../components/dashboard/BottomNav'
 import { useAuth } from '../../hooks/useAuth'
@@ -38,7 +38,10 @@ function ProfilePage() {
   const navigate = useNavigate()
   const [walletSummary, setWalletSummary] = useState({ referralsActive: 0 })
   const [referralInfo, setReferralInfo] = useState(null)
-  const [photoPreview, setPhotoPreview] = useState(null)
+  const [photoPreview, setPhotoPreview] = useState(() => {
+    if (typeof window === 'undefined') return null
+    return window.localStorage.getItem('flexpay-profile-photo') || null
+  })
   const [themeEnabled, setThemeEnabled] = useState(() => {
     if (typeof window === 'undefined') return true
     return window.localStorage.getItem('flexpay-theme-enabled') !== 'false'
@@ -75,14 +78,6 @@ function ProfilePage() {
     window.localStorage.setItem('flexpay-sounds-enabled', soundsEnabled ? 'true' : 'false')
   }, [soundsEnabled])
 
-  useEffect(() => {
-    return () => {
-      if (photoPreview) {
-        URL.revokeObjectURL(photoPreview)
-      }
-    }
-  }, [photoPreview])
-
   const referralCode = useMemo(() => {
     const code = referralInfo?.code || session?.name?.toLowerCase().replace(/\s+/g, '') || 'flexpaydemo'
     return code
@@ -98,15 +93,28 @@ function ProfilePage() {
       .join('')
   }, [session])
 
-  const handlePhotoSelect = async (event) => {
+  const handlePhotoSelect = (event) => {
     const file = event.target.files?.[0]
     if (!file) return
 
-    const previewUrl = URL.createObjectURL(file)
-    setPhotoPreview(previewUrl)
+    if (file.size > 2 * 1024 * 1024) {
+      event.target.value = ''
+      return
+    }
 
-    // Real upload call goes here later, once the backend endpoint is available.
-    // For now this is a local preview only and does not persist after refresh.
+    const reader = new FileReader()
+    reader.onload = () => {
+      const previewUrl = String(reader.result)
+      setPhotoPreview(previewUrl)
+      window.localStorage.setItem('flexpay-profile-photo', previewUrl)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handlePhotoRemove = () => {
+    setPhotoPreview(null)
+    window.localStorage.removeItem('flexpay-profile-photo')
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   const handleLogout = async () => {
@@ -157,6 +165,11 @@ function ProfilePage() {
               </button>
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoSelect} className="hidden" />
             </div>
+            {photoPreview ? (
+              <button type="button" onClick={handlePhotoRemove} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-brand-danger/40 px-4 py-2 text-sm font-semibold text-brand-danger transition hover:bg-brand-danger/10">
+                <Trash2 size={16} /> Remove photo
+              </button>
+            ) : null}
             <p className="text-sm text-brand-muted">Tap photo to change</p>
             <p className="text-xl font-semibold text-brand-text">{session?.name || 'FlexPay member'}</p>
           </div>
