@@ -42,10 +42,10 @@ function ReferralPage() {
   }, [])
 
   const referralCode = referralInfo?.code || session?.name?.toLowerCase().replace(/\s+/g, '') || 'flexpaydemo'
-  const referralLink = referralInfo?.link || `https://flexpay.com/register?ref=${referralCode}`
+  const referralLink = referralInfo?.link || `https://flexpay-theta.vercel.app/register?ref=${encodeURIComponent(referralCode)}`
   const shareMessage = useMemo(
-    () => referralInfo?.message || `I’m using FlexPay to move money fast and earn rewards. Join me here: ${referralLink}`,
-    [referralInfo, referralLink],
+    () => referralInfo?.message || `🚨🔥 STOP SCROLLING — THIS IS YOUR SIGN! 💸\n\n💰 I'm cashing out HUGE on Flexpay and YOU'RE next!\n🎁 Grab a FREE ₦60,000 welcome bonus the second you sign up\n⚡ Earn ₦15,000 for EVERY friend you bring in\n🏦 Withdraw straight to your bank — fast, real, no stress\n🎯 Daily rewards, spins & bonuses waiting for you\n\n🔗 Tap my link NOW: ${referralLink}\n🆔 Referral Code: ${referralCode}\n\n🚀 Don't watch others get rich — JOIN ME TODAY!`,
+    [referralCode, referralInfo, referralLink],
   )
 
   const copyText = async (text) => {

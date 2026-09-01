@@ -414,6 +414,16 @@ final class WalletController
             $progress[(string) $milestone] = min($referralCount, $milestone);
         }
 
+        $message = "🚨🔥 STOP SCROLLING — THIS IS YOUR SIGN! 💸\n\n" .
+            "💰 I'm cashing out HUGE on Flexpay and YOU'RE next!\n" .
+            "🎁 Grab a FREE ₦60,000 welcome bonus the second you sign up\n" .
+            "⚡ Earn ₦15,000 for EVERY friend you bring in\n" .
+            "🏦 Withdraw straight to your bank — fast, real, no stress\n" .
+            "🎯 Daily rewards, spins & bonuses waiting for you\n\n" .
+            "🔗 Tap my link NOW: " . $link . "\n" .
+            "🆔 Referral Code: " . $code . "\n\n" .
+            "🚀 Don't watch others get rich — JOIN ME TODAY!";
+
         Response::success([
             'code' => $code,
             'link' => $link,
@@ -421,7 +431,7 @@ final class WalletController
             'milestones' => $milestones,
             'progress' => $progress,
             'perReferral' => 15000,
-            'message' => 'I’m using FlexPay to move money fast and earn rewards. Join me here: ' . $link,
+            'message' => $message,
         ]);
     }
 

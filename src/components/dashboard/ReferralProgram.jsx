@@ -19,9 +19,12 @@ function ReferralProgram() {
     loadReferralInfo()
   }, [])
 
+  const referralCode = referralInfo?.code || session?.referralCode || 'FLEXPAY'
+  const referralLink = referralInfo?.link || `https://flexpay-theta.vercel.app/register?ref=${encodeURIComponent(referralCode)}`
+
   const shareMessage = useMemo(() => {
-    return referralInfo?.message || `🚨🔥 STOP SCROLLING — THIS IS YOUR SIGN! 💸\n\n💰 I'm cashing out HUGE on Flexpay and YOU'RE next!\n🎁 Grab a FREE ₦60,000 welcome bonus the second you sign up\n⚡ Earn ₦15,000 for EVERY friend you bring in\n🏦 Withdraw straight to your bank — fast, real, no stress\n🎯 Daily rewards, spins & bonuses waiting for you\n\n🔗 Tap my link NOW: https://flexpay-theta.vercel.app/\n🆔 Referral Code: FLEXXAF497D\n\n🚀 Don't watch others get rich — JOIN ME TODAY!`
-  }, [referralInfo])
+    return referralInfo?.message || `🚨🔥 STOP SCROLLING — THIS IS YOUR SIGN! 💸\n\n💰 I'm cashing out HUGE on Flexpay and YOU'RE next!\n🎁 Grab a FREE ₦60,000 welcome bonus the second you sign up\n⚡ Earn ₦15,000 for EVERY friend you bring in\n🏦 Withdraw straight to your bank — fast, real, no stress\n🎯 Daily rewards, spins & bonuses waiting for you\n\n🔗 Tap my link NOW: ${referralLink}\n🆔 Referral Code: ${referralCode}\n\n🚀 Don't watch others get rich — JOIN ME TODAY!`
+  }, [referralCode, referralInfo, referralLink])
 
   const copyText = async (text) => {
     try {
@@ -68,9 +71,9 @@ function ReferralProgram() {
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-[11px] uppercase tracking-[0.28em] text-brand-muted">Your Link</p>
-            <p className="mt-2 break-all font-mono text-sm text-brand-text">{referralInfo?.link || 'https://flexpay-theta.vercel.app/'}</p>
+            <p className="mt-2 break-all font-mono text-sm text-brand-text">{referralLink}</p>
           </div>
-          <button onClick={() => copyText('https://flexpay-theta.vercel.app/')} className="rounded-full border border-brand-border/70 bg-[rgba(198,241,53,0.08)] p-2.5 text-brand-lime">
+          <button onClick={() => copyText(referralLink)} className="rounded-full border border-brand-border/70 bg-[rgba(198,241,53,0.08)] p-2.5 text-brand-lime">
             <Copy size={16} />
           </button>
         </div>
