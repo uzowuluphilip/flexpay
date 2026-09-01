@@ -80,24 +80,16 @@ final class WalletController
         }
 
         $roll = random_int(1, 100);
-        if ($roll <= 20) {
-            $outcome = 'win';
-            $transactionType = 'spin_win';
-            // Net wallet delta for a successful spin is the profit on the staked amount.
-            // The original stake is already accounted for by the wallet balance check and
-            // by the fact that this value is applied as a completed transaction delta.
-            $resultKobo = $stakeKobo;
-            $message = 'You landed on: Win — your stake was doubled!';
-        } elseif ($roll <= 55) {
-            $outcome = 'try_again';
-            $transactionType = 'spin_try';
-            $resultKobo = 0;
-            $message = 'You landed on: Try Again — spin another time!';
-        } else {
+        if ($roll <= 65) {
             $outcome = 'lose';
             $transactionType = 'spin_loss';
             $resultKobo = -$stakeKobo;
             $message = 'You landed on: Lose — your stake was deducted.';
+        } else {
+            $outcome = 'try_again';
+            $transactionType = 'spin_try';
+            $resultKobo = 0;
+            $message = 'You landed on: Try Again — no deduction.';
         }
 
         $wallet = $this->getWalletRow($userId);

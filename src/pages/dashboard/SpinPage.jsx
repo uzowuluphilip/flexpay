@@ -10,10 +10,14 @@ const tiers = [
   { name: 'Silver', amount: 100000, icon: Gem, accent: 'from-[#c4b5fd] to-[#818cf8]' },
 ]
 const wheelSegments = [
-  { label: 'WIN', colors: ['#0f766e', '#34a58d'] }, { label: 'LOSE', colors: ['#7f1d3a', '#c45b70'] },
-  { label: 'TRY AGAIN', colors: ['#8a5a10', '#d39a36'] }, { label: 'WIN x2', colors: ['#1e477d', '#4f83bb'] },
-  { label: 'LOSE', colors: ['#572268', '#9b4eaa'] }, { label: 'TRY AGAIN', colors: ['#11616a', '#3ea9a1'] },
-  { label: 'WIN x1.5', colors: ['#8f3948', '#d26d78'] }, { label: 'LOSE', colors: ['#245247', '#4c8d78'] },
+  { label: 'LOSE', colors: ['#7f1d3a', '#c45b70'] },
+  { label: 'TRY AGAIN', colors: ['#8a5a10', '#d39a36'] },
+  { label: 'LOSE', colors: ['#572268', '#9b4eaa'] },
+  { label: 'TRY AGAIN', colors: ['#11616a', '#3ea9a1'] },
+  { label: 'LOSE', colors: ['#245247', '#4c8d78'] },
+  { label: 'TRY AGAIN', colors: ['#3f4b8d', '#6d7ae5'] },
+  { label: 'LOSE', colors: ['#3a2d52', '#8664d6'] },
+  { label: 'TRY AGAIN', colors: ['#2a4c4a', '#4eb2a9'] },
 ]
 const wheelCenter = 200
 const wheelRadius = 184
