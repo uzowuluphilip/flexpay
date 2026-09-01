@@ -11,16 +11,19 @@ function CoinMesh({ reducedMotion, tilt, scrollProgress, isMobile }) {
 
   useFrame((state, delta) => {
     if (!groupRef.current) return
-    if (reducedMotion || isMobile) {
-      groupRef.current.rotation.y = 0
-      groupRef.current.rotation.x = 0
-      groupRef.current.position.y = 0
-      groupRef.current.position.z = 0
+
+    const t = state.clock.elapsedTime
+
+    if (reducedMotion) {
+      groupRef.current.rotation.y = Math.sin(t * 0.5) * 0.8
+      groupRef.current.rotation.x = scrollProgress * 0.12
+      groupRef.current.position.y = Math.sin(t * 0.7) * 0.05 - scrollProgress * 0.12
+      groupRef.current.position.z = 0.1
       return
     }
 
-    const t = state.clock.elapsedTime
-    groupRef.current.rotation.y += delta * 0.28
+    const turnSpeed = isMobile ? 0.12 : 0.28
+    groupRef.current.rotation.y += delta * turnSpeed
     groupRef.current.rotation.x = (tilt * Math.PI) / 180 + scrollProgress * 0.14
     groupRef.current.position.y = Math.sin(t * 0.7) * 0.06 - scrollProgress * 0.24
     groupRef.current.position.z = Math.sin(t * 0.45) * 0.025
@@ -58,7 +61,9 @@ function CoinMesh({ reducedMotion, tilt, scrollProgress, isMobile }) {
 
   return (
     <group ref={groupRef}>
-      {isMobile ? coinContent : <Float speed={1.3} rotationIntensity={0.2} floatIntensity={0.35}>{coinContent}</Float>}
+      <Float speed={isMobile ? 0.9 : 1.3} rotationIntensity={isMobile ? 0.08 : 0.2} floatIntensity={isMobile ? 0.18 : 0.35}>
+        {coinContent}
+      </Float>
       {!isMobile ? <Sparkles size={24} count={10} position={[0, 1.4, 0]} scale={0.8} color="#E1FF6B" /> : null}
     </group>
   )
@@ -83,7 +88,7 @@ function CanvasDebugLogger() {
 function HeroCoin({ reducedMotion, isMobile, tilt, scrollProgress }) {
   return (
     <div className="h-[240px] w-full max-w-[560px] sm:h-[320px] md:h-[420px]">
-      <Canvas camera={{ position: [0, 0, 5.2], fov: isMobile ? 38 : 34 }} dpr={[1, 1.25]} gl={{ antialias: true, alpha: true }}>
+      <Canvas camera={{ position: [0, 0, 5.2], fov: isMobile ? 36 : 34 }} dpr={[1, 1.1]} gl={{ antialias: true, alpha: true }}>
         <color attach="background" args={["#0B0714"]} />
         <ambientLight intensity={1.1} />
         <directionalLight position={[4, 4, 4]} intensity={2.6} color="#E1FF6B" />
