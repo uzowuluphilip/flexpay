@@ -38,7 +38,7 @@ function Nav() {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <Link to="/login" className="hidden min-h-[44px] items-center rounded-full px-3 py-2 text-sm text-brand-text transition hover:text-brand-lime sm:flex">
+          <Link to="/login" className="flex min-h-[44px] items-center rounded-full px-3 py-2 text-sm text-brand-text transition hover:text-brand-lime">
             Sign In
           </Link>
           <Link
