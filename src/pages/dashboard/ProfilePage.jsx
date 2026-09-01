@@ -177,7 +177,7 @@ function ProfilePage() {
               </span>
               <div>
                 <p className="text-xs uppercase tracking-[0.28em] text-brand-lime">Member Since</p>
-                <p className="mt-2 text-sm text-brand-text">{formatDate(session?.createdAt)}</p>
+                <p className="mt-2 text-sm text-brand-text">{formatDate(session?.created_at)}</p>
               </div>
             </div>
           </div>

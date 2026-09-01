@@ -55,8 +55,6 @@ function WithdrawalActivityToast() {
     }
   }, [])
 
-  if (!import.meta.env.DEV) return null
-
   return (
     <aside
       aria-live="polite"
