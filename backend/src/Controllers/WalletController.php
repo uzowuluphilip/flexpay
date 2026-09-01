@@ -405,7 +405,10 @@ final class WalletController
     {
         $user = $this->requireUser($request);
         $code = (string) $user['referral_code'];
-        $baseUrl = $_ENV['FRONTEND_URL'] ?? 'http://localhost:5173';
+        $envBaseUrl = getenv('FRONTEND_URL') ?: ($_ENV['FRONTEND_URL'] ?? 'https://flexpay-theta.vercel.app');
+        $baseUrl = preg_replace('/^http:\/\/localhost(:\d+)?$/i', 'https://flexpay-theta.vercel.app', (string) $envBaseUrl);
+        $baseUrl = preg_replace('/^http:\/\/127\.0\.0\.1(:\d+)?$/i', 'https://flexpay-theta.vercel.app', $baseUrl);
+        $baseUrl = rtrim($baseUrl, '/');
         $link = $baseUrl . '/register?ref=' . urlencode($code);
         $referralCount = $this->countActiveReferrals((int) $user['id']);
         $milestones = [10, 25, 50, 100];
