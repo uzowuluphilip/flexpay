@@ -26,6 +26,8 @@ return [
     ['POST', '/api/spin/play'],
     ['POST', '/api/notifications/subscribe'],
     ['POST', '/api/notifications/unsubscribe'],
+    ['GET', '/api/notifications'],
+    ['POST', '/api/notifications/read'],
     ['POST', '/api/admin/login'],
     ['POST', '/api/admin/logout'],
     ['GET', '/api/admin/me'],

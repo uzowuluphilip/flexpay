@@ -7,6 +7,7 @@ namespace FlexPay\Controllers;
 use FlexPay\Config\Database;
 use FlexPay\Http\Request;
 use FlexPay\Http\Response;
+use FlexPay\Repositories\NotificationRepository;
 use FlexPay\Repositories\PushSubscriptionRepository;
 use FlexPay\Repositories\SessionRepository;
 use FlexPay\Repositories\UserRepository;
@@ -19,6 +20,7 @@ final class NotificationController
     private UserRepository $users;
     private SessionRepository $sessions;
     private PushSubscriptionRepository $subscriptions;
+    private NotificationRepository $notifications;
 
     public function __construct()
     {
@@ -26,6 +28,7 @@ final class NotificationController
         $this->users = new UserRepository();
         $this->sessions = new SessionRepository();
         $this->subscriptions = new PushSubscriptionRepository();
+        $this->notifications = new NotificationRepository();
     }
 
     public function subscribe(Request $request): void
@@ -56,6 +59,42 @@ final class NotificationController
 
         $this->subscriptions->deleteByEndpoint($endpoint, (int) $user['id']);
         Response::success(['unsubscribed' => true]);
+    }
+
+    public function list(Request $request): void
+    {
+        $user = $this->requireUser($request);
+        $rows = $this->notifications->listForUser((int) $user['id'], 20);
+
+        $items = array_map(static fn (array $row): array => [
+            'id' => (int) $row['id'],
+            'title' => $row['title'],
+            'message' => $row['message'],
+            'type' => $row['type'],
+            'link' => $row['link'],
+            'read' => (bool) $row['is_read'],
+            'time' => date('c', strtotime((string) $row['created_at'])),
+        ], $rows);
+
+        Response::success(['items' => $items]);
+    }
+
+    public function markRead(Request $request): void
+    {
+        $user = $this->requireUser($request);
+        $payload = $request->json();
+        $ids = array_values(array_filter(array_map('intval', $payload['ids'] ?? [])));
+
+        if ($ids === []) {
+            Response::error('At least one notification id is required.', 422, 'missing_notification_ids');
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $sql = 'UPDATE notifications SET is_read = 1 WHERE user_id = ? AND id IN (' . $placeholders . ')';
+        $params = [(int) $user['id'], ...$ids];
+        $this->db->prepare($sql)->execute($params);
+
+        Response::success(['updated' => true]);
     }
 
     private function requireUser(Request $request): array

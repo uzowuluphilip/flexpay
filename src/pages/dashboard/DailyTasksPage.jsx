@@ -61,6 +61,25 @@ function DailyTasksPage() {
 
     await verifyTask(task.id)
 
+    const completed = JSON.parse(window.localStorage.getItem('flexpay-completed-tasks') || '[]')
+    if (!completed.includes(task.id)) {
+      completed.push(task.id)
+      window.localStorage.setItem('flexpay-completed-tasks', JSON.stringify(completed))
+
+      const history = JSON.parse(window.localStorage.getItem('flexpay-notification-history') || '[]')
+      const entry = {
+        id: `task-completed-${task.id}`,
+        type: 'task-completion',
+        title: 'Task completed',
+        message: `Nice work! You completed ${task.title} and earned your reward.`,
+        time: 'Just now',
+      }
+
+      const nextHistory = [entry, ...history.filter((item) => item.id !== entry.id)].slice(0, 12)
+      window.localStorage.setItem('flexpay-notification-history', JSON.stringify(nextHistory))
+      window.dispatchEvent(new CustomEvent('flexpay-notifications-changed'))
+    }
+
     setTaskState((current) => ({
       ...current,
       [task.id]: { status: 'claimed', loading: false },

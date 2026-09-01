@@ -6,8 +6,83 @@ import BottomNav from '../../components/dashboard/BottomNav'
 import CurrencyDisplayToggle from '../../components/dashboard/CurrencyDisplayToggle'
 import ReferralProgram from '../../components/dashboard/ReferralProgram'
 import { useAuth } from '../../hooks/useAuth'
+import { getNotificationInbox } from '../../lib/api/notifications'
+import { tasks as taskDefinitions } from '../../lib/api/tasks'
 import { claimDailyReward, checkIn, getAchievements, getExchangeRate, getRecentActivity, getCheckInStatus, getReferralInfo, getWalletSummary } from '../../lib/api/wallet'
 import { formatDisplayAmount, getStoredDisplayCurrency } from '../../lib/currency'
+
+const notificationHistoryKey = 'flexpay-notification-history'
+const completedTasksKey = 'flexpay-completed-tasks'
+
+function readNotificationHistory() {
+  if (typeof window === 'undefined') return []
+
+  try {
+    const value = window.localStorage.getItem(notificationHistoryKey)
+    return value ? JSON.parse(value) : []
+  } catch (error) {
+    return []
+  }
+}
+
+function writeNotificationHistory(items) {
+  if (typeof window === 'undefined') return
+  window.localStorage.setItem(notificationHistoryKey, JSON.stringify(items))
+}
+
+function readCompletedTaskIds() {
+  if (typeof window === 'undefined') return []
+
+  try {
+    const value = window.localStorage.getItem(completedTasksKey)
+    return value ? JSON.parse(value) : []
+  } catch (error) {
+    return []
+  }
+}
+
+function buildNotificationHistory({ sessionName, checkInStatus, claimStatus, completedTaskIds }) {
+  const existing = readNotificationHistory()
+  const next = [...existing]
+
+  const welcomeMessage = { id: 'welcome-message', type: 'welcome', title: 'Welcome to FlexPay', message: `Hi ${sessionName || 'there'} — your wallet is ready. Start earning by checking in and completing tasks today.`, time: 'Just now' }
+  if (sessionName && !next.some((item) => item.type === 'welcome')) {
+    next.unshift(welcomeMessage)
+  }
+
+  if (!checkInStatus.checkedInToday) {
+    const reminder = { id: 'checkin-reminder', type: 'checkin-reminder', title: 'Daily Check-In reminder', message: 'You have not checked in today yet. Claim your ₦500 check-in reward before the day ends.', time: 'Today' }
+    if (!next.some((item) => item.id === reminder.id)) {
+      next.unshift(reminder)
+    }
+  }
+
+  if (claimStatus.claimsToday < 1) {
+    const reward = { id: 'daily-reward-reminder', type: 'daily-reward-reminder', title: 'Daily reward available', message: 'Your ₦4,000 daily reward is waiting. Claim it before the day resets.', time: 'Today' }
+    if (!next.some((item) => item.id === reward.id)) {
+      next.unshift(reward)
+    }
+  }
+
+  const taskReminders = taskDefinitions
+    .filter((task) => !completedTaskIds.includes(task.id))
+    .slice(0, 2)
+    .map((task) => ({
+      id: `task-reminder-${task.id}`,
+      type: 'task-reminder',
+      title: `Reminder: ${task.title}`,
+      message: `You still have ${task.title} unfinished. Complete it to keep your streak and rewards moving.`,
+      time: 'Today',
+    }))
+
+  for (const reminder of taskReminders) {
+    if (!next.some((item) => item.id === reminder.id)) {
+      next.unshift(reminder)
+    }
+  }
+
+  return next.slice(0, 12)
+}
 
 function HomePage() {
   const { session } = useAuth()
@@ -28,10 +103,64 @@ function HomePage() {
   const [checkingIn, setCheckingIn] = useState(false)
   const [claiming, setClaiming] = useState(false)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [notifications, setNotifications] = useState([])
+  const [completedTaskIds, setCompletedTaskIds] = useState(() => readCompletedTaskIds())
   const [profilePhoto, setProfilePhoto] = useState(() => {
     if (typeof window === 'undefined') return null
     return window.localStorage.getItem('flexpay-profile-photo') || null
   })
+
+  useEffect(() => {
+    const refreshCompletedTasks = () => setCompletedTaskIds(readCompletedTaskIds())
+    refreshCompletedTasks()
+
+    const handleNotificationsChanged = () => refreshCompletedTasks()
+    window.addEventListener('flexpay-notifications-changed', handleNotificationsChanged)
+    return () => window.removeEventListener('flexpay-notifications-changed', handleNotificationsChanged)
+  }, [])
+
+  useEffect(() => {
+    let active = true
+
+    async function loadNotifications() {
+      try {
+        const inbox = await getNotificationInbox()
+        if (!active) return
+
+        const fallback = buildNotificationHistory({
+          sessionName: session?.name,
+          checkInStatus,
+          claimStatus,
+          completedTaskIds,
+        })
+
+        const items = inbox.length > 0 ? inbox.map((item) => ({
+          id: item.id,
+          title: item.title,
+          message: item.message,
+          time: item.time ? new Date(item.time).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'Today',
+          type: item.type || 'general',
+        })) : fallback
+
+        setNotifications(items)
+      } catch (error) {
+        if (!active) return
+        setNotifications(buildNotificationHistory({
+          sessionName: session?.name,
+          checkInStatus,
+          claimStatus,
+          completedTaskIds,
+        }))
+      }
+    }
+
+    if (session?.name) {
+      loadNotifications()
+    }
+
+    return () => { active = false }
+  }, [session?.name, checkInStatus, claimStatus, completedTaskIds])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -183,12 +312,8 @@ function HomePage() {
             <CurrencyDisplayToggle exchangeRate={exchangeRate} value={displayCurrency} onChange={setDisplayCurrency} />
             <button
               type="button"
-              aria-label="Open notification prompt"
-              onClick={() => {
-                if (typeof window !== 'undefined') {
-                  window.dispatchEvent(new CustomEvent('flexpay-open-notification-prompt'))
-                }
-              }}
+              aria-label="Open notifications"
+              onClick={() => setNotificationsOpen((current) => !current)}
               className="relative rounded-full border border-brand-border/70 bg-[rgba(198,241,53,0.08)] p-2.5 text-brand-lime transition hover:border-brand-lime/60 hover:text-brand-lime"
             >
               <Bell size={18} />
@@ -196,6 +321,37 @@ function HomePage() {
             </button>
           </div>
         </header>
+
+        {notificationsOpen ? (
+          <div className="fixed inset-x-3 top-20 z-50 mx-auto w-full max-w-md rounded-[1.5rem] border border-brand-border/70 bg-[rgba(21,15,46,0.98)] p-4 shadow-[0_22px_60px_rgba(0,0,0,0.46)] backdrop-blur sm:inset-x-auto sm:right-5 sm:left-auto">
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.28em] text-brand-muted">Notifications</p>
+                <h2 className="mt-1 text-xl font-semibold text-brand-text">Inbox</h2>
+              </div>
+              <button type="button" aria-label="Close notifications" onClick={() => setNotificationsOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-full border border-brand-border/70 text-brand-muted hover:text-brand-text">✕</button>
+            </div>
+
+            <div className="space-y-3">
+              {notifications.map((item) => (
+                <div key={item.id} className="rounded-2xl border border-brand-border/70 bg-[rgba(255,255,255,0.02)] p-3">
+                  <div className="flex items-start gap-3">
+                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${item.type === 'welcome' ? 'bg-brand-lime text-brand-base' : 'bg-brand-panel text-brand-text'}`}>
+                      <Bell size={16} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-semibold text-brand-text">{item.title}</p>
+                        <span className="text-[10px] uppercase tracking-[0.2em] text-brand-muted">{item.time}</span>
+                      </div>
+                      <p className="mt-1 text-sm leading-6 text-brand-muted">{item.message}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         <div className="grid gap-4 lg:grid-cols-[1.25fr_0.75fr]">
           <section className="rounded-[1.75rem] border border-brand-border/70 bg-[linear-gradient(135deg,rgba(198,241,53,0.12),rgba(11,7,20,0.86))] p-4 shadow-[0_20px_48px_rgba(0,0,0,0.2)] sm:p-5 lg:p-6">
