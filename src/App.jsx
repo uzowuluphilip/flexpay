@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom'
+import { useEffect } from 'react'
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
@@ -35,6 +36,11 @@ import OnboardingPage from './pages/auth/OnboardingPage'
 import UpgradePage from './pages/dashboard/UpgradePage'
 
 function App() {
+  useEffect(() => {
+    const themeEnabled = window.localStorage.getItem('flexpay-theme-enabled') !== 'false'
+    document.documentElement.dataset.theme = themeEnabled ? 'dark' : 'light'
+  }, [])
+
   return (
     <AuthProvider>
       <AdminAuthProvider>

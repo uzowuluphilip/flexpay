@@ -20,6 +20,16 @@ html {
   background-color: var(--fp-bg-base);
 }
 
+html[data-theme='light'] {
+  --fp-bg-base: #f5f7ef;
+  --fp-bg-panel: #ffffff;
+  --fp-bg-panel-raised: #edf4d4;
+  --fp-border: #c8d2aa;
+  --fp-text-primary: #171b0d;
+  --fp-text-muted: #59634a;
+  --fp-text-faint: #707c5f;
+}
+
 body {
   margin: 0;
   min-width: 320px;

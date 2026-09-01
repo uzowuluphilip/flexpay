@@ -31,9 +31,14 @@ function ProfilePage() {
 
   useEffect(() => {
     async function loadProfileData() {
-      const [walletData, referralData] = await Promise.all([getWalletSummary(), getReferralInfo()])
-      setWalletSummary(walletData)
-      setReferralInfo(referralData)
+      const [walletResult, referralResult] = await Promise.allSettled([getWalletSummary(), getReferralInfo()])
+
+      if (walletResult.status === 'fulfilled') {
+        setWalletSummary(walletResult.value)
+      }
+      if (referralResult.status === 'fulfilled') {
+        setReferralInfo(referralResult.value)
+      }
     }
 
     loadProfileData()
@@ -42,6 +47,7 @@ function ProfilePage() {
   useEffect(() => {
     if (typeof window === 'undefined') return
     window.localStorage.setItem('flexpay-theme-enabled', themeEnabled ? 'true' : 'false')
+    document.documentElement.dataset.theme = themeEnabled ? 'dark' : 'light'
   }, [themeEnabled])
 
   useEffect(() => {
