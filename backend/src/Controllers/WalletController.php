@@ -83,7 +83,10 @@ final class WalletController
         if ($roll <= 20) {
             $outcome = 'win';
             $transactionType = 'spin_win';
-            $resultKobo = $stakeKobo * 2;
+            // Net wallet delta for a successful spin is the profit on the staked amount.
+            // The original stake is already accounted for by the wallet balance check and
+            // by the fact that this value is applied as a completed transaction delta.
+            $resultKobo = $stakeKobo;
             $message = 'You landed on: Win — your stake was doubled!';
         } elseif ($roll <= 55) {
             $outcome = 'try_again';
