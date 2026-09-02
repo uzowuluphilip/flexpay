@@ -98,15 +98,15 @@ function ReferralProgram() {
 
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {[
-            { label: 'Telegram', color: 'bg-[#24A1DE]', icon: telegramLogo },
+            { label: 'Telegram', color: 'bg-[#24A1DE]', icon: telegramLogo, href: 'https://t.me/OFFICIALFLEXPAY' },
             { label: 'WhatsApp', color: 'bg-[#25D366]', icon: MessageCircle },
             { label: 'Instagram', color: 'bg-gradient-to-br from-[#F58529] via-[#DD2A7B] to-[#8134AF]', icon: Camera },
             { label: 'LinkedIn', color: 'bg-[#0A66C2]', icon: BriefcaseBusiness },
             { label: 'TikTok', color: 'bg-[#111111]', icon: Music2 },
-          ].map(({ label, color, icon }) => {
+          ].map(({ label, color, icon, href }) => {
             const Icon = icon
-            return (
-              <button key={label} className="flex flex-col items-center justify-center rounded-[1.25rem] border border-brand-border/70 bg-[rgba(21,15,46,0.9)] p-3 text-center text-sm text-brand-text">
+            const content = (
+              <>
                 <div className={`flex h-11 w-11 items-center justify-center rounded-full ${color} text-brand-base`}>
                   {typeof Icon === 'string' ? (
                     <img src={Icon} alt="Telegram" className="h-5 w-5" />
@@ -115,6 +115,16 @@ function ReferralProgram() {
                   )}
                 </div>
                 <span className="mt-3 text-[11px] uppercase tracking-[0.2em] text-brand-muted">{label}</span>
+              </>
+            )
+
+            return href ? (
+              <a key={label} href={href} target="_blank" rel="noreferrer" aria-label="Open official FlexPay Telegram channel" className="flex flex-col items-center justify-center rounded-[1.25rem] border border-brand-border/70 bg-[rgba(21,15,46,0.9)] p-3 text-center text-sm text-brand-text">
+                {content}
+              </a>
+            ) : (
+              <button key={label} type="button" className="flex flex-col items-center justify-center rounded-[1.25rem] border border-brand-border/70 bg-[rgba(21,15,46,0.9)] p-3 text-center text-sm text-brand-text">
+                {content}
               </button>
             )
           })}
