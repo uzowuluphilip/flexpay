@@ -42,10 +42,45 @@
   animation-name: cardBounceSubtle;
 }
 
+/* Shared fallback for card surfaces across dashboard and admin pages. */
+.dashboard-motion-content section,
+.dashboard-motion-content article,
+.dashboard-motion-content .bg-gray-800 {
+  animation: cardBounce 2.6s ease-in-out infinite;
+  animation-delay: var(--wave-delay, 0s);
+}
+
+.dashboard-motion-content section:nth-of-type(2),
+.dashboard-motion-content article:nth-of-type(2),
+.dashboard-motion-content .bg-gray-800:nth-of-type(2) {
+  --wave-delay: 0.15s;
+}
+
+.dashboard-motion-content section:nth-of-type(3),
+.dashboard-motion-content article:nth-of-type(3),
+.dashboard-motion-content .bg-gray-800:nth-of-type(3) {
+  --wave-delay: 0.3s;
+}
+
+.dashboard-motion-content section:nth-of-type(4),
+.dashboard-motion-content article:nth-of-type(4),
+.dashboard-motion-content .bg-gray-800:nth-of-type(4) {
+  --wave-delay: 0.45s;
+}
+
+.dashboard-motion-content section:nth-of-type(5),
+.dashboard-motion-content article:nth-of-type(5),
+.dashboard-motion-content .bg-gray-800:nth-of-type(5) {
+  --wave-delay: 0.6s;
+}
+
 /* Respect prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
   .wave-bounce-item,
-  .wave-bounce-item.subtle {
+  .wave-bounce-item.subtle,
+  .dashboard-motion-content section,
+  .dashboard-motion-content article,
+  .dashboard-motion-content .bg-gray-800 {
     animation: none;
     transform: translateY(0);
   }

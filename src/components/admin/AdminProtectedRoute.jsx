@@ -22,7 +22,7 @@ export const AdminProtectedRoute = ({ children }) => {
   return (
     <>
       <LightningWaveBackground />
-      {children}
+      <div className="dashboard-motion-content relative z-10">{children}</div>
     </>
   );
 };

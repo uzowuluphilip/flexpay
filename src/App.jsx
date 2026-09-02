@@ -98,7 +98,7 @@ function DashboardVisualLayout() {
   return (
     <>
       <LightningWaveBackground />
-      <div className="relative z-10">
+      <div className="dashboard-motion-content relative z-10">
         <Outlet />
       </div>
     </>

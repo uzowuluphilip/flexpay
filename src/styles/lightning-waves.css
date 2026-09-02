@@ -26,6 +26,16 @@
   pointer-events: none;
 }
 
+/* Page shells remain transparent so the fixed effect can show through. */
+.dashboard-motion-content > * {
+  background-color: transparent;
+}
+
+.dashboard-motion-content > * > .bg-brand-base,
+.dashboard-motion-content > * > .bg-gray-900 {
+  background-color: transparent;
+}
+
 .lightning-wave-layer svg {
   position: absolute;
   width: 200%;
