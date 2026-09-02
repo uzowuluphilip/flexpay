@@ -19,13 +19,24 @@ $dotenv = Dotenv::createImmutable(__DIR__ . '/..');
 $dotenv->safeLoad();
 
 $frontEndUrl = rtrim((string) ($_ENV['FRONTEND_URL'] ?? 'http://localhost:5173'), '/');
-$allowedOrigins = array_values(array_filter(array_map('trim', explode(',', (string) ($_ENV['ALLOWED_ORIGINS'] ?? $frontEndUrl)))));
+$defaultOrigins = [
+    $frontEndUrl,
+    'https://flexpay-theta.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:4173',
+    'http://localhost:4174',
+    'http://localhost',
+];
+$allowedOrigins = array_values(array_unique(array_filter(array_map('trim', array_merge(
+    $defaultOrigins,
+    explode(',', (string) ($_ENV['ALLOWED_ORIGINS'] ?? ''))
+)), static fn (string $origin): bool => $origin !== '')));
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 $effectiveOrigin = '';
 
 if ($origin === '') {
     $effectiveOrigin = $frontEndUrl;
-} elseif (in_array($origin, $allowedOrigins, true)) {
+} elseif (in_array($origin, $allowedOrigins, true) || preg_match('/^https:\/\/.*\.vercel\.app$/', $origin) === 1) {
     $effectiveOrigin = $origin;
 }
 
