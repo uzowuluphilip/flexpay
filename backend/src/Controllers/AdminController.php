@@ -34,7 +34,7 @@ final class AdminController
 
         $totalUsers = (int) $this->db->query('SELECT COUNT(*) FROM users')->fetchColumn();
         $verifiedUsers = (int) $this->db->query('SELECT COUNT(*) FROM users WHERE email_verified_at IS NOT NULL')->fetchColumn();
-        $bannedUsers = (int) $this->db->query('SELECT COUNT(*) FROM users WHERE status = "banned"')->fetchColumn();
+        $bannedUsers = (int) $this->db->query('SELECT COUNT(*) FROM users WHERE status IN ("banned", "suspended")')->fetchColumn();
         $platformBalance = (int) $this->db->query('SELECT COALESCE(SUM(balance_kobo), 0) FROM wallets')->fetchColumn();
         $pendingWithdrawals = (int) $this->db->query('SELECT COUNT(*) FROM withdrawal_requests WHERE status = "pending"')->fetchColumn();
         $approvedWithdrawals = (int) $this->db->query('SELECT COUNT(*) FROM withdrawal_requests WHERE status IN ("approved", "paid")')->fetchColumn();
@@ -62,16 +62,29 @@ final class AdminController
         $admin = $this->requireAdmin($request);
 
         $search = trim((string) ($request->query('search') ?? ''));
+        $status = trim((string) ($request->query('status') ?? ''));
         $limit = min(100, (int) ($request->query('limit') ?? 50));
         $offset = (int) ($request->query('offset') ?? 0);
 
         $query = 'SELECT id, full_name, email, status, email_verified_at, created_at FROM users';
         $params = [];
+        $conditions = [];
 
         if ($search !== '') {
-            $query .= ' WHERE full_name LIKE ? OR email LIKE ?';
+            $conditions[] = '(full_name LIKE ? OR email LIKE ?)';
             $pattern = '%' . $search . '%';
             $params = [$pattern, $pattern];
+        }
+
+        if ($status === 'banned') {
+            $conditions[] = 'status IN ("banned", "suspended")';
+        } elseif (in_array($status, ['active', 'suspended', 'banned'], true)) {
+            $conditions[] = 'status = ?';
+            $params[] = $status;
+        }
+
+        if ($conditions !== []) {
+            $query .= ' WHERE ' . implode(' AND ', $conditions);
         }
 
         $query .= ' ORDER BY created_at DESC LIMIT ? OFFSET ?';

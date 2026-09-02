@@ -33,8 +33,8 @@ export const adminApi = {
   getOverview: () => apiFetch('/api/admin/overview'),
 
   // Users
-  listUsers: (search = '', limit = 50, offset = 0) =>
-    apiFetch(`/api/admin/users?search=${encodeURIComponent(search)}&limit=${limit}&offset=${offset}`),
+  listUsers: (search = '', limit = 50, offset = 0, status = '') =>
+    apiFetch(`/api/admin/users?search=${encodeURIComponent(search)}&limit=${limit}&offset=${offset}&status=${encodeURIComponent(status)}`),
   
   getUserDetail: (userId) => apiFetch(`/api/admin/users/${userId}`),
   

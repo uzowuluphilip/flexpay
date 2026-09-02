@@ -13,15 +13,16 @@ export default function AdminUsersPage() {
   const [adjustAmount, setAdjustAmount] = useState('');
   const [adjustReason, setAdjustReason] = useState('');
   const [isAdjusting, setIsAdjusting] = useState(false);
+  const statusFilter = new URLSearchParams(window.location.search).get('status') || '';
 
   useEffect(() => {
     loadUsers();
-  }, [search]);
+  }, [search, statusFilter]);
 
   const loadUsers = async () => {
     try {
       setIsLoading(true);
-      const data = await adminApi.listUsers(search, 50, 0);
+      const data = await adminApi.listUsers(search, 50, 0, statusFilter);
       setUsers(data.users || []);
     } catch (err) {
       setError(err.message);
