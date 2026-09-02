@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import BottomNav from '../../components/dashboard/BottomNav'
 import CurrencyDisplayToggle from '../../components/dashboard/CurrencyDisplayToggle'
 import { tasks as taskDefinitions, verifyTask } from '../../lib/api/tasks'
-import { getExchangeRate } from '../../lib/api/wallet'
+import { getExchangeRate, getWalletSummary } from '../../lib/api/wallet'
 import { formatDisplayAmount, getStoredDisplayCurrency } from '../../lib/currency'
 
 function DailyTasksPage() {
@@ -14,6 +14,7 @@ function DailyTasksPage() {
       return acc
     }, {})
   )
+  const [wallet, setWallet] = useState({ balance: 0, referralsActive: 0, perReferral: 0, verified: true })
   const [exchangeRate, setExchangeRate] = useState(1359)
   const [displayCurrency, setDisplayCurrency] = useState(getStoredDisplayCurrency())
 
@@ -21,6 +22,21 @@ function DailyTasksPage() {
     let active = true
     getExchangeRate().then((rate) => {
       if (active) setExchangeRate(rate)
+    }).catch(() => undefined)
+    return () => { active = false }
+  }, [])
+
+  useMemo(() => {
+    let active = true
+    getWalletSummary().then((data) => {
+      if (active) {
+        setWallet({
+          balance: data.balance,
+          referralsActive: data.referralsActive,
+          perReferral: data.perReferral,
+          verified: data.verified,
+        })
+      }
     }).catch(() => undefined)
     return () => { active = false }
   }, [])
@@ -80,6 +96,19 @@ function DailyTasksPage() {
       window.dispatchEvent(new CustomEvent('flexpay-notifications-changed'))
     }
 
+    // Refetch wallet balance after task completion
+    try {
+      const walletData = await getWalletSummary()
+      setWallet({
+        balance: walletData.balance,
+        referralsActive: walletData.referralsActive,
+        perReferral: walletData.perReferral,
+        verified: walletData.verified,
+      })
+    } catch (error) {
+      console.error('Failed to update wallet:', error)
+    }
+
     setTaskState((current) => ({
       ...current,
       [task.id]: { status: 'claimed', loading: false },
@@ -124,7 +153,7 @@ function DailyTasksPage() {
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-3">
               <div className="rounded-[1.5rem] border border-brand-border/70 bg-[rgba(21,15,46,0.92)] p-4">
                 <p className="text-[11px] uppercase tracking-[0.28em] text-brand-muted">Total pool</p>
                 <p className="mt-3 text-3xl font-semibold text-brand-text">{totalPoolLabel}</p>
@@ -132,6 +161,10 @@ function DailyTasksPage() {
               <div className="rounded-[1.5rem] border border-brand-border/70 bg-[rgba(21,15,46,0.92)] p-4">
                 <p className="text-[11px] uppercase tracking-[0.28em] text-brand-muted">Available now</p>
                 <p className="mt-3 text-3xl font-semibold text-brand-text">{taskDefinitions.length} tasks</p>
+              </div>
+              <div className="rounded-[1.5rem] border border-brand-border/70 bg-[rgba(21,15,46,0.92)] p-4">
+                <p className="text-[11px] uppercase tracking-[0.28em] text-brand-muted">Your balance</p>
+                <p className="mt-3 text-3xl font-semibold text-brand-lime">₦{(wallet.balance / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
               </div>
             </div>
           </div>

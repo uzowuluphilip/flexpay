@@ -272,6 +272,14 @@ function HomePage() {
 
       if (updated.checkedInToday) {
         triggerConfetti()
+        // Refetch wallet balance after successful check-in
+        const walletData = await getWalletSummary()
+        setWallet({
+          balance: walletData.balance,
+          referralsActive: walletData.referralsActive,
+          perReferral: walletData.perReferral,
+          verified: walletData.verified,
+        })
       }
     } finally {
       setCheckingIn(false)
@@ -285,6 +293,14 @@ function HomePage() {
       setClaimStatus({
         claimsToday: updated.claimsToday,
         claimsRemaining: updated.claimsRemaining,
+      })
+      // Refetch wallet balance after successful claim
+      const walletData = await getWalletSummary()
+      setWallet({
+        balance: walletData.balance,
+        referralsActive: walletData.referralsActive,
+        perReferral: walletData.perReferral,
+        verified: walletData.verified,
       })
     } finally {
       setClaiming(false)
