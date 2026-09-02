@@ -21,7 +21,7 @@ import { AuthProvider } from './lib/authContext'
 import { AdminAuthProvider } from './lib/AdminAuthContext'
 import { AdminProtectedRoute } from './components/admin/AdminProtectedRoute'
 import AdminLoginPage from './pages/admin/LoginPage'
-import AdminDashboard from './pages/admin/DashboardPage'
+import StaticAdminDashboard from './pages/admin/StaticAdminDashboard'
 import AdminUsersPage from './pages/admin/UsersPage'
 import AdminWithdrawalsPage from './pages/admin/WithdrawalsPage'
 import AdminTasksPage from './pages/admin/TasksPage'
@@ -76,7 +76,7 @@ function App() {
             
             {/* Admin Routes */}
             <Route path="/admin/login" element={<AdminLoginPage />} />
-            <Route path="/admin" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
+            <Route path="/admin" element={<AdminProtectedRoute><StaticAdminDashboard /></AdminProtectedRoute>} />
             <Route path="/admin/users" element={<AdminProtectedRoute><AdminUsersPage /></AdminProtectedRoute>} />
             <Route path="/admin/withdrawals" element={<AdminProtectedRoute><AdminWithdrawalsPage /></AdminProtectedRoute>} />
             <Route path="/admin/topups" element={<AdminProtectedRoute><AdminTopUpsPage /></AdminProtectedRoute>} />
