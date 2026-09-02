@@ -1,0 +1,131 @@
+/* Lightning Wave Background Styles */
+
+.lightning-wave-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Radial glow layer */
+.lightning-glow-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    ellipse at top left,
+    rgba(124, 58, 237, 0.15) 0%,
+    rgba(124, 58, 237, 0.05) 30%,
+    transparent 60%
+  ),
+  radial-gradient(
+    ellipse at bottom right,
+    rgba(198, 241, 53, 0.12) 0%,
+    rgba(198, 241, 53, 0.04) 30%,
+    transparent 60%
+  );
+  z-index: 1;
+}
+
+/* SVG Wave Container */
+.lightning-wave-svg {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 200%;
+  height: auto;
+  z-index: 2;
+}
+
+/* Wave paths */
+.wave {
+  opacity: 0.8;
+  fill: currentColor;
+}
+
+/* Back wave - slow, violet */
+.wave-back {
+  animation: wave-drift-slow 25s linear infinite;
+}
+
+/* Middle wave - medium speed, lime */
+.wave-middle {
+  animation: wave-drift-medium 20s linear infinite;
+}
+
+/* Front wave - fast with flicker, light lime */
+.wave-front {
+  animation: wave-drift-fast 15s linear infinite, wave-flicker 3s ease-in-out infinite;
+}
+
+/* Horizontal drift animation - seamless loop */
+@keyframes wave-drift-slow {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(25%);
+  }
+}
+
+@keyframes wave-drift-medium {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-20%);
+  }
+}
+
+@keyframes wave-drift-fast {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-30%);
+  }
+}
+
+/* Flicker pulse for front wave */
+@keyframes wave-flicker {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  25% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  75% {
+    opacity: 0.85;
+  }
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .wave-back,
+  .wave-middle,
+  .wave-front {
+    animation: none;
+  }
+
+  .wave-front {
+    opacity: 0.6;
+  }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 640px) {
+  .lightning-wave-svg {
+    height: auto;
+    min-height: 200px;
+  }
+}

@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import BottomNav from '../../components/dashboard/BottomNav'
 import CurrencyDisplayToggle from '../../components/dashboard/CurrencyDisplayToggle'
+import '../../styles/wave-bounce.css'
 import { tasks as taskDefinitions, verifyTask } from '../../lib/api/tasks'
 import { getExchangeRate, getWalletSummary } from '../../lib/api/wallet'
 import { formatDisplayAmount, getStoredDisplayCurrency } from '../../lib/currency'
@@ -188,7 +189,8 @@ function DailyTasksPage() {
               const isClaimed = state.status === 'claimed'
 
               return (
-                <div key={task.id} className="flex flex-col gap-4 rounded-[1.5rem] border border-brand-border/70 bg-[rgba(11,7,20,0.54)] p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div key={task.id} className="wave-bounce-item">
+                  <div className="flex flex-col gap-4 rounded-[1.5rem] border border-brand-border/70 bg-[rgba(11,7,20,0.54)] p-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[rgba(198,241,53,0.12)] text-brand-lime">
                       <Check size={18} />
@@ -219,6 +221,7 @@ function DailyTasksPage() {
                       )}
                     </div>
                   </div>
+                </div>
                 </div>
               )
             })}

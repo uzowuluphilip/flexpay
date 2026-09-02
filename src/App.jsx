@@ -1,5 +1,6 @@
-import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter as Router, Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { useEffect } from 'react'
+import LightningWaveBackground from './components/LightningWaveBackground'
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
@@ -45,31 +46,33 @@ function App() {
     <AuthProvider>
       <AdminAuthProvider>
         <Router>
-        <RouteTransitionLayout>
-          <Routes>
+          <RouteTransitionLayout>
+            <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
-            <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
-            <Route path="/about" element={<ProtectedRoute><AboutPage /></ProtectedRoute>} />
-            <Route path="/invest" element={<ProtectedRoute><InvestPage /></ProtectedRoute>} />
-            <Route path="/referrals" element={<ProtectedRoute><ReferralPage /></ProtectedRoute>} />
-            <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-            <Route path="/support" element={<ProtectedRoute><SupportPage /></ProtectedRoute>} />
-            <Route path="/community" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
-            <Route path="/leaders" element={<ProtectedRoute><PlaceholderPage title="Leaders" description="Leaderboard details are coming soon. Check back when the ranking page is ready." /></ProtectedRoute>} />
-            <Route path="/transactions" element={<ProtectedRoute><PlaceholderPage title="History" description="Transaction history is coming soon. We’ll add the full feed and filters here next." /></ProtectedRoute>} />
-            <Route path="/withdraw" element={<ProtectedRoute><WithdrawPage /></ProtectedRoute>} />
-            <Route path="/top-up" element={<ProtectedRoute><TopUpPage /></ProtectedRoute>} />
-            <Route path="/upgrade" element={<ProtectedRoute><UpgradePage /></ProtectedRoute>} />
-            <Route path="/tasks" element={<ProtectedRoute><DailyTasksPage /></ProtectedRoute>} />
-            <Route path="/daily-tasks" element={<ProtectedRoute><DailyTasksPage /></ProtectedRoute>} />
-            <Route path="/spin" element={<ProtectedRoute><SpinPage /></ProtectedRoute>} />
-            <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
-            <Route path="/status" element={<ProtectedRoute><StatusPage /></ProtectedRoute>} />
-            <Route path="/dev/history" element={<HistoryPage />} />
-            <Route path="/achievements" element={<ProtectedRoute><AchievementsPage /></ProtectedRoute>} />
+            <Route element={<DashboardVisualLayout />}>
+              <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
+              <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+              <Route path="/about" element={<ProtectedRoute><AboutPage /></ProtectedRoute>} />
+              <Route path="/invest" element={<ProtectedRoute><InvestPage /></ProtectedRoute>} />
+              <Route path="/referrals" element={<ProtectedRoute><ReferralPage /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+              <Route path="/support" element={<ProtectedRoute><SupportPage /></ProtectedRoute>} />
+              <Route path="/community" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
+              <Route path="/leaders" element={<ProtectedRoute><PlaceholderPage title="Leaders" description="Leaderboard details are coming soon. Check back when the ranking page is ready." /></ProtectedRoute>} />
+              <Route path="/transactions" element={<ProtectedRoute><PlaceholderPage title="History" description="Transaction history is coming soon. We’ll add the full feed and filters here next." /></ProtectedRoute>} />
+              <Route path="/withdraw" element={<ProtectedRoute><WithdrawPage /></ProtectedRoute>} />
+              <Route path="/top-up" element={<ProtectedRoute><TopUpPage /></ProtectedRoute>} />
+              <Route path="/upgrade" element={<ProtectedRoute><UpgradePage /></ProtectedRoute>} />
+              <Route path="/tasks" element={<ProtectedRoute><DailyTasksPage /></ProtectedRoute>} />
+              <Route path="/daily-tasks" element={<ProtectedRoute><DailyTasksPage /></ProtectedRoute>} />
+              <Route path="/spin" element={<ProtectedRoute><SpinPage /></ProtectedRoute>} />
+              <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
+              <Route path="/status" element={<ProtectedRoute><StatusPage /></ProtectedRoute>} />
+              <Route path="/dev/history" element={<HistoryPage />} />
+              <Route path="/achievements" element={<ProtectedRoute><AchievementsPage /></ProtectedRoute>} />
+            </Route>
             
             {/* Admin Routes */}
             <Route path="/admin/login" element={<AdminLoginPage />} />
@@ -88,6 +91,17 @@ function App() {
       </Router>
       </AdminAuthProvider>
     </AuthProvider>
+  )
+}
+
+function DashboardVisualLayout() {
+  return (
+    <>
+      <LightningWaveBackground />
+      <div className="relative z-10">
+        <Outlet />
+      </div>
+    </>
   )
 }
 

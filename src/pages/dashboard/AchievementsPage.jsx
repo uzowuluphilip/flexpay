@@ -1,6 +1,7 @@
 import { Award, Banknote, Check, Flame, Lock, Megaphone, Sparkles, Star, Trophy, Users, Wallet, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import '../../styles/wave-bounce.css'
 import { getAchievements } from '../../lib/api/wallet'
 
 const iconMap = { users: Users, megaphone: Megaphone, trophy: Trophy, wallet: Wallet, banknote: Banknote, sparkles: Sparkles, star: Star, check: Check, flame: Flame }
@@ -26,7 +27,7 @@ export default function AchievementsPage() {
         </header>
 
         <main className="mt-6">
-          {error ? <p className="rounded-xl border border-red-400/30 bg-red-400/10 p-4 text-sm text-red-200">{error}</p> : data.list.length === 0 ? <p className="text-center text-sm text-brand-muted">Loading achievements...</p> : <div className="grid gap-3 sm:grid-cols-2">{data.list.map((achievement) => <AchievementCard key={achievement.id} achievement={achievement} />)}</div>}
+          {error ? <p className="rounded-xl border border-red-400/30 bg-red-400/10 p-4 text-sm text-red-200">{error}</p> : data.list.length === 0 ? <p className="text-center text-sm text-brand-muted">Loading achievements...</p> : <div className="grid gap-3 sm:grid-cols-2">{data.list.map((achievement) => <div key={achievement.id} className="wave-bounce-item"><AchievementCard achievement={achievement} /></div>)}</div>}
         </main>
       </div>
     </div>

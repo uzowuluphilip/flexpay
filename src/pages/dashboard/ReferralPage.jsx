@@ -3,6 +3,7 @@ import { ArrowLeft, Copy, Gift, Link2, Send, Share2, Sparkles } from 'lucide-rea
 import { Link, useNavigate } from 'react-router-dom'
 import BottomNav from '../../components/dashboard/BottomNav'
 import CurrencyDisplayToggle from '../../components/dashboard/CurrencyDisplayToggle'
+import '../../styles/wave-bounce.css'
 import { useAuth } from '../../hooks/useAuth'
 import { getExchangeRate, getReferralInfo, getWalletSummary } from '../../lib/api/wallet'
 import { formatDisplayAmount, getStoredDisplayCurrency } from '../../lib/currency'

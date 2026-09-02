@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAdminAuth } from '../../lib/AdminAuthContext';
+import LightningWaveBackground from '../LightningWaveBackground';
 
 export const AdminProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAdminAuth();
@@ -17,5 +18,10 @@ export const AdminProtectedRoute = ({ children }) => {
     return <Navigate to="/admin/login" replace />;
   }
 
-  return children;
+  return (
+    <>
+      <LightningWaveBackground />
+      {children}
+    </>
+  );
 };

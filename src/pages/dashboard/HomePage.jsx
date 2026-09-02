@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import BottomNav from '../../components/dashboard/BottomNav'
 import CurrencyDisplayToggle from '../../components/dashboard/CurrencyDisplayToggle'
 import ReferralProgram from '../../components/dashboard/ReferralProgram'
+import '../../styles/wave-bounce.css'
 import { useAuth } from '../../hooks/useAuth'
 import { getNotificationInbox } from '../../lib/api/notifications'
 import { tasks as taskDefinitions } from '../../lib/api/tasks'
@@ -499,13 +500,15 @@ function HomePage() {
             { title: 'Spin & Win', subtitle: 'Try your luck with free spins', to: '/spin', icon: Sparkles, accent: 'from-[#8a71ff] to-[#c2b0ff]' },
             { title: 'History', subtitle: 'Review past activity instantly', to: '/history', icon: ArrowDownLeft, accent: 'from-[#ff8158] to-[#ffaf7f]' },
           ].map(({ title, subtitle, to, icon: Icon, accent }) => (
-            <Link key={title} to={to} className="rounded-[1.5rem] border border-brand-border/70 bg-[rgba(21,15,46,0.92)] p-4 transition hover:border-brand-lime/60">
-              <div className={`inline-flex rounded-2xl bg-gradient-to-br ${accent} p-2.5 text-brand-base`}>
-                <Icon size={18} />
-              </div>
-              <h3 className="mt-4 text-lg font-semibold text-brand-text">{title}</h3>
-              <p className="mt-2 text-sm leading-6 text-brand-muted">{subtitle}</p>
-            </Link>
+            <div key={title} className="wave-bounce-item">
+              <Link to={to} className="rounded-[1.5rem] border border-brand-border/70 bg-[rgba(21,15,46,0.92)] p-4 transition hover:border-brand-lime/60">
+                <div className={`inline-flex rounded-2xl bg-gradient-to-br ${accent} p-2.5 text-brand-base`}>
+                  <Icon size={18} />
+                </div>
+                <h3 className="mt-4 text-lg font-semibold text-brand-text">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-brand-muted">{subtitle}</p>
+              </Link>
+            </div>
           ))}
         </section>
 
