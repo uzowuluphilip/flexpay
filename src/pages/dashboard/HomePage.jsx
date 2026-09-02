@@ -412,12 +412,12 @@ function HomePage() {
           </section>
 
           <div className="grid gap-4">
-            <section className="rounded-[1.5rem] border border-brand-border/70 bg-[rgba(21,15,46,0.92)] p-4 sm:p-5">
+            <section style={{ '--wave-delay': '0s' }} className="wave-bounce-item rounded-[1.5rem] border border-brand-border/70 bg-[rgba(21,15,46,0.92)] p-4 sm:p-5">
               <p className="text-[11px] uppercase tracking-[0.28em] text-brand-muted">Referrals</p>
               <p className="mt-3 font-mono text-3xl font-semibold text-brand-text">{wallet.referralsActive}</p>
               <p className="mt-2 text-sm text-brand-muted">Active invites on your network.</p>
             </section>
-            <section className="rounded-[1.5rem] border border-brand-border/70 bg-[rgba(21,15,46,0.92)] p-4 sm:p-5">
+            <section style={{ '--wave-delay': '0.15s' }} className="wave-bounce-item rounded-[1.5rem] border border-brand-border/70 bg-[rgba(21,15,46,0.92)] p-4 sm:p-5">
               <p className="text-[11px] uppercase tracking-[0.28em] text-brand-muted">Per Referral</p>
               <p className="mt-3 font-mono text-3xl font-semibold text-brand-text">{perReferralLabel}</p>
               <p className="mt-2 text-sm text-brand-muted">Your reward payout per friend.</p>
@@ -499,16 +499,14 @@ function HomePage() {
             { title: 'Daily Tasks', subtitle: 'Small wins for bigger rewards', to: '/tasks', icon: CircleDollarSign, accent: 'from-[#f2b95c] to-[#ffdf96]' },
             { title: 'Spin & Win', subtitle: 'Try your luck with free spins', to: '/spin', icon: Sparkles, accent: 'from-[#8a71ff] to-[#c2b0ff]' },
             { title: 'History', subtitle: 'Review past activity instantly', to: '/history', icon: ArrowDownLeft, accent: 'from-[#ff8158] to-[#ffaf7f]' },
-          ].map(({ title, subtitle, to, icon: Icon, accent }) => (
-            <div key={title} className="wave-bounce-item">
-              <Link to={to} className="rounded-[1.5rem] border border-brand-border/70 bg-[rgba(21,15,46,0.92)] p-4 transition hover:border-brand-lime/60">
+          ].map(({ title, subtitle, to, icon: Icon, accent }, index) => (
+            <Link key={title} to={to} style={{ '--wave-delay': `${index * 0.15}s` }} className="wave-bounce-item rounded-[1.5rem] border border-brand-border/70 bg-[rgba(21,15,46,0.92)] p-4 transition hover:border-brand-lime/60">
                 <div className={`inline-flex rounded-2xl bg-gradient-to-br ${accent} p-2.5 text-brand-base`}>
                   <Icon size={18} />
                 </div>
                 <h3 className="mt-4 text-lg font-semibold text-brand-text">{title}</h3>
                 <p className="mt-2 text-sm leading-6 text-brand-muted">{subtitle}</p>
-              </Link>
-            </div>
+            </Link>
           ))}
         </section>
 

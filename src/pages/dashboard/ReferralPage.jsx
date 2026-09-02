@@ -177,7 +177,7 @@ function ReferralPage() {
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
             {steps.map((step, index) => (
               <div key={step.title} className="rounded-[1.5rem] border border-brand-border/60 bg-brand-panel/90 p-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[rgba(198,241,53,0.12)] text-brand-lime font-semibold">
+                <div style={{ '--wave-delay': `${index * 0.15}s` }} className="wave-bounce-item flex h-10 w-10 items-center justify-center rounded-2xl bg-[rgba(198,241,53,0.12)] text-brand-lime font-semibold">
                   {index + 1}
                 </div>
                 <p className="mt-4 text-sm leading-7 text-brand-muted">{step.title}</p>
@@ -195,8 +195,8 @@ function ReferralPage() {
             <div className="rounded-full border border-brand-border/70 bg-brand-panel/80 px-3 py-1 text-xs uppercase tracking-[0.28em] text-brand-lime">Track progress</div>
           </div>
           <div className="mt-6 space-y-4">
-            {milestoneRewards.map((item) => (
-              <div key={item.label} className="rounded-[1.5rem] border border-brand-border/60 bg-brand-panel/90 p-4">
+            {milestoneRewards.map((item, index) => (
+              <div key={item.label} style={{ '--wave-delay': `${index * 0.15}s` }} className="wave-bounce-item rounded-[1.5rem] border border-brand-border/60 bg-brand-panel/90 p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-brand-text">{item.label}</p>

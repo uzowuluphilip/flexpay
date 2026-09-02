@@ -5,91 +5,21 @@
   100% {
     transform: translateY(0);
   }
-  25% {
-    transform: translateY(-8px);
-  }
   50% {
-    transform: translateY(0);
-  }
-  75% {
-    transform: translateY(-4px);
+    transform: translateY(-14px);
   }
 }
 
 /* Apply wave-bounce animation with staggered delays */
 .wave-bounce-item {
   animation: cardBounce 2.6s ease-in-out infinite;
-}
-
-/* Stagger delays - increment by 0.12-0.15s per item */
-.wave-bounce-item:nth-child(1) {
-  animation-delay: 0s;
-}
-
-.wave-bounce-item:nth-child(2) {
-  animation-delay: 0.12s;
-}
-
-.wave-bounce-item:nth-child(3) {
-  animation-delay: 0.24s;
-}
-
-.wave-bounce-item:nth-child(4) {
-  animation-delay: 0.36s;
-}
-
-.wave-bounce-item:nth-child(5) {
-  animation-delay: 0.48s;
-}
-
-.wave-bounce-item:nth-child(6) {
-  animation-delay: 0.60s;
-}
-
-.wave-bounce-item:nth-child(7) {
-  animation-delay: 0.72s;
-}
-
-.wave-bounce-item:nth-child(8) {
-  animation-delay: 0.84s;
-}
-
-.wave-bounce-item:nth-child(9) {
-  animation-delay: 0.96s;
-}
-
-.wave-bounce-item:nth-child(10) {
-  animation-delay: 1.08s;
-}
-
-.wave-bounce-item:nth-child(11) {
-  animation-delay: 1.20s;
-}
-
-.wave-bounce-item:nth-child(12) {
-  animation-delay: 1.32s;
-}
-
-.wave-bounce-item:nth-child(13) {
-  animation-delay: 1.44s;
-}
-
-.wave-bounce-item:nth-child(14) {
-  animation-delay: 1.56s;
-}
-
-.wave-bounce-item:nth-child(15) {
-  animation-delay: 1.68s;
-}
-
-.wave-bounce-item:nth-child(16) {
-  animation-delay: 1.80s;
+  animation-delay: var(--wave-delay, 0s);
 }
 
 /* Subtle bounce for admin sidebar - smaller amplitude */
 .wave-bounce-item.subtle {
   animation: cardBounce 2.6s ease-in-out infinite;
-  --bounce-amount: 4px; /* Smaller for subtle effect */
+  animation-delay: var(--wave-delay, 0s);
 }
 
 @keyframes cardBounceSubtle {

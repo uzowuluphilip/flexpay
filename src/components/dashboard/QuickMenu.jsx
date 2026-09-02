@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Users, ListChecks, History, CreditCard, User, MessageSquare, ShieldCheck, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import '../../styles/wave-bounce.css'
 
 const items = [
   { title: 'Tasks', subtitle: 'Daily earning tasks', to: '/tasks', icon: ListChecks },
@@ -84,11 +85,12 @@ function QuickMenu({ open, onClose }) {
                     show: { transition: { staggerChildren: 0.05, delayChildren: 0.05 } },
                   }}
                 >
-                  {items.map((item) => (
+                  {items.map((item, index) => (
                     <motion.button
                       key={item.title}
                       onClick={() => handleSelect(item.to)}
-                      className="flex h-24 flex-col items-start justify-center gap-2 rounded-xl border border-[rgba(198,241,53,0.06)] bg-[rgba(198,241,53,0.02)] p-3 text-left"
+                      style={{ '--wave-delay': `${index * 0.15}s` }}
+                      className="wave-bounce-item flex h-24 flex-col items-start justify-center gap-2 rounded-xl border border-[rgba(198,241,53,0.06)] bg-[rgba(198,241,53,0.02)] p-3 text-left"
                       variants={{
                         hidden: { opacity: 0, scale: 0.6 },
                         show: { opacity: 1, scale: [1.05, 0.98, 1], transition: { type: 'spring', stiffness: 320, damping: 18 } },

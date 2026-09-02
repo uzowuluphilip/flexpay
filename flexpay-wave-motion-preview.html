@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FlexPay — Wave Bounce + Lightning Wave Background Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --lime:#C6F135;
+    --lime-light:#E1FF6B;
+    --bg-base:#0B0714;
+    --bg-panel:#150F2E;
+    --bg-panel-raised:#1B1440;
+    --border:#2A2158;
+    --text:#F4F1FF;
+    --muted:#B8B3D9;
+    --violet:#7C3AED;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:var(--bg-base);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    overflow-x:hidden;
+    position:relative;
+  }
+
+  /* ================= LIGHTNING WAVE BACKGROUND ================= */
+  .bg-wave-layer{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    overflow:hidden;
+    pointer-events:none;
+  }
+  .bg-wave-layer svg{
+    position:absolute;
+    width:200%;
+    height:100%;
+    top:0;
+    left:0;
+  }
+  .wave-path{
+    fill:none;
+    stroke-linecap:round;
+    filter:drop-shadow(0 0 8px currentColor) drop-shadow(0 0 18px currentColor);
+    opacity:0.55;
+  }
+  .wave-1{ stroke:var(--lime); stroke-width:2; color:var(--lime); animation:driftLeft 14s linear infinite; }
+  .wave-2{ stroke:var(--violet); stroke-width:1.5; color:var(--violet); animation:driftLeft 20s linear infinite reverse; opacity:0.4; top:120px; }
+  .wave-3{ stroke:var(--lime-light); stroke-width:1; color:var(--lime-light); animation:driftLeft 26s linear infinite; opacity:0.3; top:260px; }
+
+  @keyframes driftLeft{
+    from{ transform:translateX(0); }
+    to{ transform:translateX(-50%); }
+  }
+
+  /* occasional lightning flicker pulse on the main wave */
+  .wave-1{ animation:driftLeft 14s linear infinite, flicker 3.2s ease-in-out infinite; }
+  @keyframes flicker{
+    0%, 92%, 100%{ opacity:0.55; }
+    94%{ opacity:1; }
+    95%{ opacity:0.3; }
+    96%{ opacity:0.9; }
+  }
+
+  .bg-glow{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background:
+      radial-gradient(ellipse 70% 50% at 15% 20%, rgba(124,58,237,0.20), transparent 60%),
+      radial-gradient(ellipse 60% 45% at 85% 75%, rgba(198,241,53,0.10), transparent 55%);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .wave-1, .wave-2, .wave-3{ animation:none !important; }
+  }
+
+  /* ================= PAGE CONTENT ================= */
+  .page{ position:relative; z-index:1; padding:56px 24px 80px; max-width:960px; margin:0 auto; }
+  .eyebrow{
+    font-family:'Space Grotesk',monospace; font-size:12px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--lime); margin-bottom:14px;
+  }
+  h1{ font-family:'Space Grotesk',sans-serif; font-size:32px; margin-bottom:10px; }
+  .sub{ color:var(--muted); font-size:14.5px; margin-bottom:48px; max-width:520px; line-height:1.6; }
+
+  /* ================= WAVE-BOUNCE CARD GRID ================= */
+  .section-label{ font-size:12.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.1em; margin-bottom:18px; }
+  .card-grid{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:18px; margin-bottom:56px;
+  }
+  .wave-card{
+    background:var(--bg-panel);
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:22px 18px;
+    text-align:center;
+    animation:cardBounce 2.6s ease-in-out infinite;
+  }
+  .wave-card .icon-tile{
+    width:44px;height:44px;border-radius:12px;margin:0 auto 14px;
+    background:rgba(198,241,53,0.1);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .wave-card h3{ font-size:14px; font-weight:600; margin-bottom:4px; }
+  .wave-card p{ font-size:11.5px; color:var(--muted); }
+
+  @keyframes cardBounce{
+    0%, 100%{ transform:translateY(0); }
+    50%{ transform:translateY(-14px); }
+  }
+  /* staggered delay per card creates the "wave ripple" look */
+  .wave-card:nth-child(1){ animation-delay:0s; }
+  .wave-card:nth-child(2){ animation-delay:0.15s; }
+  .wave-card:nth-child(3){ animation-delay:0.3s; }
+  .wave-card:nth-child(4){ animation-delay:0.45s; }
+  .wave-card:nth-child(5){ animation-delay:0.6s; }
+  .wave-card:nth-child(6){ animation-delay:0.75s; }
+
+  @media (prefers-reduced-motion: reduce){
+    .wave-card{ animation:none !important; }
+  }
+
+  /* ================= WAVE-BOUNCE ICON ROW ================= */
+  .icon-row{ display:flex; gap:22px; flex-wrap:wrap; }
+  .wave-icon{
+    width:56px;height:56px;border-radius:16px;
+    background:linear-gradient(135deg,var(--lime-light),var(--lime));
+    display:flex;align-items:center;justify-content:center;
+    font-size:22px;
+    animation:cardBounce 2.6s ease-in-out infinite;
+    box-shadow:0 8px 20px rgba(198,241,53,0.25);
+  }
+  .icon-row .wave-icon:nth-child(1){ animation-delay:0s; }
+  .icon-row .wave-icon:nth-child(2){ animation-delay:0.12s; }
+  .icon-row .wave-icon:nth-child(3){ animation-delay:0.24s; }
+  .icon-row .wave-icon:nth-child(4){ animation-delay:0.36s; }
+  .icon-row .wave-icon:nth-child(5){ animation-delay:0.48s; }
+  .icon-row .wave-icon:nth-child(6){ animation-delay:0.6s; }
+  .icon-row .wave-icon:nth-child(7){ animation-delay:0.72s; }
+
+  @media (prefers-reduced-motion: reduce){
+    .wave-icon{ animation:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-glow"></div>
+<div class="bg-wave-layer">
+  <svg viewBox="0 0 1600 400" preserveAspectRatio="none">
+    <path class="wave-path wave-1" d="M0,120 C100,40 200,200 300,120 C400,40 500,200 600,120 C700,40 800,200 900,120 C1000,40 1100,200 1200,120 C1300,40 1400,200 1500,120 C1600,40 1700,200 1800,120" />
+    <path class="wave-path wave-2" d="M0,180 C120,260 220,100 340,180 C460,260 560,100 680,180 C800,260 900,100 1020,180 C1140,260 1240,100 1360,180 C1480,260 1580,100 1700,180" />
+    <path class="wave-path wave-3" d="M0,260 C150,330 250,190 400,260 C550,330 650,190 800,260 C950,330 1050,190 1200,260 C1350,330 1450,190 1600,260" />
+  </svg>
+</div>
+
+<div class="page">
+  <div class="eyebrow">Motion Preview</div>
+  <h1>Wave Bounce + Lightning Background</h1>
+  <p class="sub">This is a preview only — cards/icons bounce continuously in a staggered sequence (creating a ripple/wave look), and the background has slow-drifting glowing wave lines with an occasional lightning-style flicker. Reduced-motion visitors get a static version.</p>
+
+  <div class="section-label">Cards (wave-bounce)</div>
+  <div class="card-grid">
+    <div class="wave-card"><div class="icon-tile">🎯</div><h3>Tasks</h3><p>Daily earning</p></div>
+    <div class="wave-card"><div class="icon-tile">🎁</div><h3>Referrals</h3><p>Invite & earn</p></div>
+    <div class="wave-card"><div class="icon-tile">📊</div><h3>History</h3><p>Transactions</p></div>
+    <div class="wave-card"><div class="icon-tile">👤</div><h3>Profile</h3><p>Account</p></div>
+    <div class="wave-card"><div class="icon-tile">💰</div><h3>Withdraw</h3><p>Cash out</p></div>
+    <div class="wave-card"><div class="icon-tile">👥</div><h3>Community</h3><p>Join us</p></div>
+  </div>
+
+  <div class="section-label">Icons (wave-bounce)</div>
+  <div class="icon-row">
+    <div class="wave-icon">🏠</div>
+    <div class="wave-icon">💳</div>
+    <div class="wave-icon">📈</div>
+    <div class="wave-icon">🔔</div>
+    <div class="wave-icon">⚡</div>
+    <div class="wave-icon">🎯</div>
+    <div class="wave-icon">💬</div>
+  </div>
+</div>
+
+</body>
+</html>

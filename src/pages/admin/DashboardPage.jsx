@@ -69,37 +69,43 @@ export default function AdminDashboard() {
           <div className="flex space-x-8 overflow-x-auto">
             <button
               onClick={() => navigate('/admin')}
-              className="px-4 py-3 text-blue-400 border-b-2 border-blue-400 whitespace-nowrap"
+              style={{ '--wave-delay': '0s' }}
+              className="wave-bounce-item subtle px-4 py-3 text-blue-400 border-b-2 border-blue-400 whitespace-nowrap"
             >
               Dashboard
             </button>
             <button
               onClick={() => navigate('/admin/users')}
-              className="px-4 py-3 text-gray-400 hover:text-white whitespace-nowrap"
+              style={{ '--wave-delay': '0.15s' }}
+              className="wave-bounce-item subtle px-4 py-3 text-gray-400 hover:text-white whitespace-nowrap"
             >
               Users
             </button>
             <button
               onClick={() => navigate('/admin/withdrawals')}
-              className="px-4 py-3 text-gray-400 hover:text-white whitespace-nowrap"
+              style={{ '--wave-delay': '0.3s' }}
+              className="wave-bounce-item subtle px-4 py-3 text-gray-400 hover:text-white whitespace-nowrap"
             >
               Withdrawals
             </button>
             <button
               onClick={() => navigate('/admin/topups')}
-              className="px-4 py-3 text-gray-400 hover:text-white whitespace-nowrap"
+              style={{ '--wave-delay': '0.45s' }}
+              className="wave-bounce-item subtle px-4 py-3 text-gray-400 hover:text-white whitespace-nowrap"
             >
               Top-Ups
             </button>
             <button
               onClick={() => navigate('/admin/tasks')}
-              className="px-4 py-3 text-gray-400 hover:text-white whitespace-nowrap"
+              style={{ '--wave-delay': '0.6s' }}
+              className="wave-bounce-item subtle px-4 py-3 text-gray-400 hover:text-white whitespace-nowrap"
             >
               Tasks
             </button>
             <button
               onClick={() => navigate('/admin/achievements')}
-              className="px-4 py-3 text-gray-400 hover:text-white whitespace-nowrap"
+              style={{ '--wave-delay': '0.75s' }}
+              className="wave-bounce-item subtle px-4 py-3 text-gray-400 hover:text-white whitespace-nowrap"
             >
               Achievements
             </button>
@@ -114,33 +120,27 @@ export default function AdminDashboard() {
         {overview && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Total Users */}
-            <div className="wave-bounce-item">
-              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+            <div style={{ '--wave-delay': '0s' }} className="wave-bounce-item bg-gray-800 rounded-lg p-6 border border-gray-700">
                 <p className="text-gray-400 text-sm font-medium">Total Users</p>
                 <p className="text-3xl font-bold text-white mt-2">{overview.totalUsers}</p>
-              </div>
             </div>
 
             {/* Verified Users */}
-            <div className="wave-bounce-item">
-              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+            <div style={{ '--wave-delay': '0.15s' }} className="wave-bounce-item bg-gray-800 rounded-lg p-6 border border-gray-700">
                 <p className="text-gray-400 text-sm font-medium">Verified Users</p>
                 <p className="text-3xl font-bold text-white mt-2">{overview.verifiedUsers}</p>
-              </div>
             </div>
 
             {/* Platform Balance */}
-            <div className="wave-bounce-item">
-              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+            <div style={{ '--wave-delay': '0.3s' }} className="wave-bounce-item bg-gray-800 rounded-lg p-6 border border-gray-700">
                 <p className="text-gray-400 text-sm font-medium">Platform Balance</p>
                 <p className="text-3xl font-bold text-green-400 mt-2">
                   ₦{overview.platformBalance.toLocaleString()}
                 </p>
-              </div>
             </div>
 
             {/* Pending Withdrawals */}
-            <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+            <div style={{ '--wave-delay': '0.45s' }} className="wave-bounce-item bg-gray-800 rounded-lg p-6 border border-gray-700">
               <p className="text-gray-400 text-sm font-medium">Pending Withdrawals</p>
               <p className="text-3xl font-bold text-yellow-400 mt-2">{overview.pendingWithdrawals}</p>
               <p className="text-gray-400 text-sm mt-2">
@@ -149,13 +149,13 @@ export default function AdminDashboard() {
             </div>
 
             {/* Today's Signups */}
-            <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+            <div style={{ '--wave-delay': '0.6s' }} className="wave-bounce-item bg-gray-800 rounded-lg p-6 border border-gray-700">
               <p className="text-gray-400 text-sm font-medium">Today's Signups</p>
               <p className="text-3xl font-bold text-blue-400 mt-2">{overview.todaySignups}</p>
             </div>
 
             {/* Today's Task Completions */}
-            <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+            <div style={{ '--wave-delay': '0.75s' }} className="wave-bounce-item bg-gray-800 rounded-lg p-6 border border-gray-700">
               <p className="text-gray-400 text-sm font-medium">Today's Task Completions</p>
               <p className="text-3xl font-bold text-purple-400 mt-2">{overview.todayTaskCompletions}</p>
             </div>

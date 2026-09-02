@@ -2,130 +2,90 @@
 
 .lightning-wave-background {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.lightning-glow-layer {
+  position: fixed;
+  inset: 0;
   z-index: 0;
   pointer-events: none;
-  overflow: hidden;
+  background:
+    radial-gradient(ellipse 70% 50% at 15% 20%, rgba(124, 58, 237, 0.20), transparent 60%),
+    radial-gradient(ellipse 60% 45% at 85% 75%, rgba(198, 241, 53, 0.10), transparent 55%);
 }
 
-/* Radial glow layer */
-.lightning-glow-layer {
+.lightning-wave-layer {
   position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.lightning-wave-layer svg {
+  position: absolute;
+  width: 200%;
+  height: 100%;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(
-    ellipse at top left,
-    rgba(124, 58, 237, 0.15) 0%,
-    rgba(124, 58, 237, 0.05) 30%,
-    transparent 60%
-  ),
-  radial-gradient(
-    ellipse at bottom right,
-    rgba(198, 241, 53, 0.12) 0%,
-    rgba(198, 241, 53, 0.04) 30%,
-    transparent 60%
-  );
-  z-index: 1;
 }
 
-/* SVG Wave Container */
-.lightning-wave-svg {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 200%;
-  height: auto;
-  z-index: 2;
+.wave-path {
+  fill: none;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 8px currentColor) drop-shadow(0 0 18px currentColor);
+  opacity: 0.55;
 }
 
-/* Wave paths */
-.wave {
-  opacity: 0.8;
-  fill: currentColor;
+.wave-1 {
+  stroke: #C6F135;
+  stroke-width: 2;
+  color: #C6F135;
+  animation: driftLeft 14s linear infinite, flicker 3.2s ease-in-out infinite;
 }
 
-/* Back wave - slow, violet */
-.wave-back {
-  animation: wave-drift-slow 25s linear infinite;
+.wave-2 {
+  stroke: #7C3AED;
+  stroke-width: 1.5;
+  color: #7C3AED;
+  animation: driftLeft 20s linear infinite reverse;
+  opacity: 0.4;
 }
 
-/* Middle wave - medium speed, lime */
-.wave-middle {
-  animation: wave-drift-medium 20s linear infinite;
+.wave-3 {
+  stroke: #E1FF6B;
+  stroke-width: 1;
+  color: #E1FF6B;
+  animation: driftLeft 26s linear infinite;
+  opacity: 0.3;
 }
 
-/* Front wave - fast with flicker, light lime */
-.wave-front {
-  animation: wave-drift-fast 15s linear infinite, wave-flicker 3s ease-in-out infinite;
-}
-
-/* Horizontal drift animation - seamless loop */
-@keyframes wave-drift-slow {
-  0% {
+@keyframes driftLeft {
+  from {
     transform: translateX(0);
   }
-  100% {
-    transform: translateX(25%);
+  to {
+    transform: translateX(-50%);
   }
 }
 
-@keyframes wave-drift-medium {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-20%);
-  }
-}
-
-@keyframes wave-drift-fast {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-30%);
-  }
-}
-
-/* Flicker pulse for front wave */
-@keyframes wave-flicker {
+@keyframes flicker {
   0%,
-  100% {
-    opacity: 0.5;
-  }
-  25% {
-    opacity: 0.8;
-  }
-  50% {
-    opacity: 0.4;
-  }
-  75% {
-    opacity: 0.85;
-  }
+  92%,
+  100% { opacity: 0.55; }
+  94% { opacity: 1; }
+  95% { opacity: 0.3; }
+  96% { opacity: 0.9; }
 }
 
-/* Respect prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
-  .wave-back,
-  .wave-middle,
-  .wave-front {
-    animation: none;
-  }
-
-  .wave-front {
-    opacity: 0.6;
-  }
-}
-
-/* Mobile responsiveness */
-@media (max-width: 640px) {
-  .lightning-wave-svg {
-    height: auto;
-    min-height: 200px;
+  .wave-1,
+  .wave-2,
+  .wave-3 {
+    animation: none !important;
   }
 }

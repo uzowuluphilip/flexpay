@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAdminAuth } from '../../lib/AdminAuthContext';
 import LightningWaveBackground from '../LightningWaveBackground';
+import '../../styles/wave-bounce.css';
 
 export const AdminProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAdminAuth();
