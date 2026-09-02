@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ArrowLeft, BadgeCheck, CircleDot, Eye, ShieldCheck, Sparkles, Users, Wallet, XCircle, ChevronDown } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import BottomNav from '../../components/dashboard/BottomNav'
@@ -45,7 +45,7 @@ const proofItems = [
 ]
 
 const faqs = [
-  { question: 'Is Chixx9ja a registered company?', answer: 'Yes. We are registered as a company in Nigeria and operate under applicable business regulations.' },
+  { question: 'Is Flexpay a registered company?', answer: 'Yes. We are registered as a company in Nigeria and operate under applicable business regulations.' },
   { question: 'Are you regulated by the Central Bank of Nigeria?', answer: 'We follow Nigerian financial and payout guidelines, with registered operations that align to local standards.' },
   { question: 'How is my personal data protected?', answer: 'Personal data is protected with strict controls and processes built around Nigeria’s data protection regulations.' },
   { question: 'How do I know withdrawals are real?', answer: 'Withdrawals are processed with confirmation steps and human review to keep funds moving securely.' },
@@ -55,6 +55,19 @@ const faqs = [
 
 function AboutPage() {
   const [openIndex, setOpenIndex] = useState(0)
+  const [viewerCount, setViewerCount] = useState(27652)
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setViewerCount((current) => {
+        const direction = Math.random() > 0.48 ? 1 : -1
+        const change = Math.floor(Math.random() * 18) + 1
+        return Math.min(27950, Math.max(27480, current + direction * change))
+      })
+    }, 2200)
+
+    return () => window.clearInterval(interval)
+  }, [])
 
   return (
     <div className="min-h-screen bg-brand-base pb-[7.5rem] text-brand-text sm:pb-[8.5rem]">
@@ -86,7 +99,7 @@ function AboutPage() {
                 <p className="mt-4 max-w-2xl text-sm leading-7 text-brand-muted">A registered Nigerian rewards institution operating under recognized regulatory frameworks.</p>
                 <div className="mt-6 flex flex-wrap items-center gap-3 rounded-[1.5rem] border border-brand-border/50 bg-brand-panel/80 px-4 py-3 text-sm text-brand-lime">
                   <span className="inline-flex items-center gap-2 rounded-full bg-brand-panel/80 px-3 py-2 text-brand-lime">
-                    <Eye size={14} /> 27,652 viewers · live
+                    <Eye size={14} /> {viewerCount.toLocaleString('en-NG')} viewers · live
                   </span>
                   <span className="inline-flex items-center gap-2 rounded-full bg-brand-panel/80 px-3 py-2 text-brand-lime">
                     <Users size={14} /> Lagos · Nigeria
@@ -224,7 +237,7 @@ function AboutPage() {
                 </div>
                 <div>
                   <p className="text-xs uppercase tracking-[0.28em] text-brand-lime">Issued by</p>
-                  <h3 className="mt-2 text-xl font-semibold text-brand-text">Chixx9ja Limited</h3>
+                  <h3 className="mt-2 text-xl font-semibold text-brand-text">Flexpay Limited</h3>
                   <p className="mt-2 text-sm text-brand-muted">Federal Republic of Nigeria</p>
                 </div>
               </div>
@@ -241,14 +254,14 @@ function AboutPage() {
             <div className="rounded-[1.5rem] border border-brand-lime/20 bg-brand-panel/90 p-5">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.28em] text-brand-lime">About Chixx9ja</p>
+                  <p className="text-xs uppercase tracking-[0.28em] text-brand-lime">About Flexpay</p>
                   <h3 className="mt-2 text-xl font-semibold text-brand-text">Tap to reveal</h3>
                 </div>
                 <div className="rounded-2xl bg-gradient-to-br from-brand-lime/20 via-brand-panel to-brand-panel p-3 text-brand-lime">
                   <Sparkles size={18} />
                 </div>
               </div>
-              <p className="mt-4 text-sm leading-7 text-brand-muted">Chixx9ja is designed to provide a transparent rewards platform with a focus on secure, accountable payout experiences for Nigerian users.</p>
+              <p className="mt-4 text-sm leading-7 text-brand-muted">Flexpay is designed to provide a transparent rewards platform with a focus on secure, accountable payout experiences for Nigerian users.</p>
             </div>
           </div>
         </section>
