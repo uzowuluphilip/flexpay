@@ -182,6 +182,7 @@ export async function getTransactionHistory() {
     timestamp: item.timestamp || new Date().toISOString(),
     amount: Number(item.amount ?? 0),
     credit: item.credit ?? true,
+    status: item.status || 'completed',
   })) : []
 }
 
@@ -247,4 +248,12 @@ export async function submitTopupReceipt(amount, file, token = null) {
   formData.append('amount', String(amount))
   formData.append('receipt', file)
   return uploadRequest('/api/wallet/topup/submit-receipt', formData, token)
+}
+
+export async function submitUpgradeReceipt(amount, tier, file, token = null) {
+  const formData = new FormData()
+  formData.append('amount', String(amount))
+  formData.append('tier', tier)
+  formData.append('receipt', file)
+  return uploadRequest('/api/wallet/upgrade/submit-receipt', formData, token)
 }

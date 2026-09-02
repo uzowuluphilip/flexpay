@@ -346,11 +346,99 @@ final class AdminController
         Response::success(['topups' => $stmt->fetchAll()]);
     }
 
+    public function listPendingTransactions(Request $request): void
+    {
+        $this->requireAdmin($request);
+        $stmt = $this->db->query(
+            'SELECT t.id, t.type, t.amount_kobo, t.status, t.reference, t.meta, t.created_at,
+                    u.full_name, u.email, tr.id AS receipt_id, wr.id AS withdrawal_id, wr.bank_name,
+                    wr.account_number, wr.account_name
+             FROM transactions t
+             JOIN users u ON u.id = t.user_id
+             LEFT JOIN topup_receipts tr ON tr.transaction_id = t.id
+             LEFT JOIN withdrawal_requests wr ON wr.transaction_id = t.id
+             WHERE t.status = "pending"
+             ORDER BY t.created_at ASC'
+        );
+        Response::success(['transactions' => $stmt->fetchAll()]);
+    }
+
+    public function approveTransaction(Request $request, array $params = []): void
+    {
+        $admin = $this->requireAdmin($request);
+        $transactionId = (int) ($params['id'] ?? 0);
+        $this->db->beginTransaction();
+        try {
+            $stmt = $this->db->prepare('SELECT t.*, wr.id AS withdrawal_id FROM transactions t LEFT JOIN withdrawal_requests wr ON wr.transaction_id = t.id WHERE t.id = ? FOR UPDATE');
+            $stmt->execute([$transactionId]);
+            $transaction = $stmt->fetch();
+            if ($transaction === false || $transaction['status'] !== 'pending') {
+                $this->db->rollBack();
+                Response::error('Pending transaction not found.', 404);
+            }
+
+            if ($transaction['type'] === 'top_up') {
+                $meta = json_decode((string) ($transaction['meta'] ?? '{}'), true) ?: [];
+                $claimedKobo = (int) ($meta['claimed_amount_kobo'] ?? $transaction['amount_kobo']);
+                $feeKobo = (int) round($claimedKobo * 0.02);
+                $this->db->prepare('UPDATE transactions SET amount_kobo = ?, status = "completed", meta = JSON_SET(COALESCE(meta, JSON_OBJECT()), "$.fee_kobo", ?, "$.credited_amount_kobo", ?), updated_at = NOW() WHERE id = ?')->execute([$claimedKobo - $feeKobo, $feeKobo, $claimedKobo - $feeKobo, $transactionId]);
+                $this->db->prepare('UPDATE topup_receipts SET status = "approved", reviewed_by_admin_id = ?, reviewed_at = NOW() WHERE transaction_id = ? AND status = "pending"')->execute([(int) $admin['id'], $transactionId]);
+            } elseif ($transaction['type'] === 'withdrawal') {
+                $balanceStmt = $this->db->prepare('SELECT COALESCE(SUM(amount_kobo), 0) FROM transactions WHERE user_id = ? AND status = "completed"');
+                $balanceStmt->execute([(int) $transaction['user_id']]);
+                if ((int) $balanceStmt->fetchColumn() < abs((int) $transaction['amount_kobo'])) {
+                    $this->db->rollBack();
+                    Response::error('Insufficient balance to approve this withdrawal.', 422, 'insufficient_balance');
+                }
+                $this->db->prepare('UPDATE withdrawal_requests SET status = "approved", reviewed_by_admin_id = ?, reviewed_at = NOW() WHERE transaction_id = ?')->execute([(int) $admin['id'], $transactionId]);
+            } elseif ($transaction['type'] === 'lock_hold') {
+                $balanceStmt = $this->db->prepare('SELECT COALESCE(SUM(amount_kobo), 0) FROM transactions WHERE user_id = ? AND status = "completed"');
+                $balanceStmt->execute([(int) $transaction['user_id']]);
+                if ((int) $balanceStmt->fetchColumn() < abs((int) $transaction['amount_kobo'])) {
+                    $this->db->rollBack();
+                    Response::error('Insufficient balance to approve this investment.', 422, 'insufficient_balance');
+                }
+            }
+
+            if ($transaction['type'] !== 'top_up') {
+                $this->db->prepare('UPDATE transactions SET status = "completed", updated_at = NOW() WHERE id = ?')->execute([$transactionId]);
+            }
+            if ($transaction['type'] === 'upgrade_fee') {
+                $this->db->prepare('UPDATE topup_receipts SET status = "approved", reviewed_by_admin_id = ?, reviewed_at = NOW() WHERE transaction_id = ? AND status = "pending"')->execute([(int) $admin['id'], $transactionId]);
+            }
+            $this->syncWalletBalance((int) $transaction['user_id']);
+            $this->db->commit();
+        } catch (\Throwable $throwable) {
+            if ($this->db->inTransaction()) $this->db->rollBack();
+            throw $throwable;
+        }
+        Response::success(['approved' => true]);
+    }
+
+    public function rejectTransaction(Request $request, array $params = []): void
+    {
+        $admin = $this->requireAdmin($request);
+        $transactionId = (int) ($params['id'] ?? 0);
+        $reason = trim((string) ($request->json()['reason'] ?? ''));
+        if ($reason === '') Response::error('Rejection reason is required.', 422);
+        $stmt = $this->db->prepare('SELECT * FROM transactions WHERE id = ? AND status = "pending" LIMIT 1');
+        $stmt->execute([$transactionId]);
+        $transaction = $stmt->fetch();
+        if ($transaction === false) Response::error('Pending transaction not found.', 404);
+        $this->db->prepare('UPDATE transactions SET status = "reversed", meta = JSON_SET(COALESCE(meta, JSON_OBJECT()), "$.rejection_reason", ?), updated_at = NOW() WHERE id = ? AND status = "pending"')->execute([$reason, $transactionId]);
+        $this->db->prepare('UPDATE withdrawal_requests SET status = "rejected", rejection_reason = ?, reviewed_by_admin_id = ?, reviewed_at = NOW() WHERE transaction_id = ? AND status = "pending"')->execute([$reason, (int) $admin['id'], $transactionId]);
+        $this->db->prepare('UPDATE topup_receipts SET status = "rejected", rejection_reason = ?, reviewed_by_admin_id = ?, reviewed_at = NOW() WHERE transaction_id = ? AND status = "pending"')->execute([$reason, (int) $admin['id'], $transactionId]);
+        if ($transaction['type'] === 'lock_hold') {
+            $this->db->prepare('UPDATE fund_locks SET status = "cancelled", released_at = NOW() WHERE user_id = ? AND amount_kobo = ? AND status = "active" ORDER BY id DESC LIMIT 1')->execute([(int) $transaction['user_id'], abs((int) $transaction['amount_kobo'])]);
+        }
+        Response::success(['rejected' => true]);
+    }
+
     public function approveTopup(Request $request, array $params = []): void
     {
         $admin = $this->requireAdmin($request);
         $receiptId = (int) ($params['id'] ?? 0);
-        $stmt = $this->db->prepare('SELECT tr.*, t.amount_kobo, t.wallet_id, t.reference FROM topup_receipts tr JOIN transactions t ON t.id = tr.transaction_id WHERE tr.id = ? LIMIT 1');
+        $stmt = $this->db->prepare('SELECT tr.*, t.amount_kobo, t.wallet_id, t.reference, t.type, t.meta FROM topup_receipts tr JOIN transactions t ON t.id = tr.transaction_id WHERE tr.id = ? LIMIT 1');
         $stmt->execute([$receiptId]);
         $receipt = $stmt->fetch();
         if ($receipt === false) {
@@ -360,21 +448,27 @@ final class AdminController
             Response::success(['alreadyProcessed' => true, 'status' => $receipt['status']]);
         }
         $claimedKobo = (int) $receipt['amount_kobo'];
+        $transactionMeta = json_decode((string) ($receipt['meta'] ?? '{}'), true) ?: [];
+        if ($receipt['type'] === 'upgrade_fee') {
+            $claimedKobo = (int) ($transactionMeta['claimed_amount_kobo'] ?? 0);
+        }
         $feeKobo = (int) round($claimedKobo * 0.02);
-        $creditKobo = $claimedKobo - $feeKobo;
+        $creditKobo = $receipt['type'] === 'upgrade_fee' ? 0 : $claimedKobo - $feeKobo;
         $this->db->beginTransaction();
         try {
             $this->db->prepare('UPDATE transactions SET amount_kobo = ?, status = "completed", meta = JSON_SET(COALESCE(meta, JSON_OBJECT()), "$.claimed_amount_kobo", ?, "$.fee_kobo", ?, "$.credited_amount_kobo", ?) WHERE id = ? AND status = "pending"')->execute([$creditKobo, $claimedKobo, $feeKobo, $creditKobo, (int) $receipt['transaction_id']]);
             $this->db->prepare('UPDATE topup_receipts SET status = "approved", reviewed_by_admin_id = ?, reviewed_at = NOW() WHERE id = ? AND status = "pending"')->execute([(int) $admin['id'], $receiptId]);
-            $this->db->prepare('INSERT INTO activity_feed (user_id, type, description, amount_kobo, created_at) VALUES (?, "top_up", ?, ?, NOW())')->execute([(int) $receipt['user_id'], 'Top-up approved after receipt review', $creditKobo]);
-            $this->syncWalletBalance((int) $receipt['user_id']);
+            if ($receipt['type'] !== 'upgrade_fee') {
+                $this->db->prepare('INSERT INTO activity_feed (user_id, type, description, amount_kobo, created_at) VALUES (?, "top_up", ?, ?, NOW())')->execute([(int) $receipt['user_id'], 'Top-up approved after receipt review', $creditKobo]);
+                $this->syncWalletBalance((int) $receipt['user_id']);
+            }
             $this->logAudit((int) $admin['id'], 'topup.approve', 'topup_receipt', $receiptId, ['claimed_amount_kobo' => $claimedKobo, 'fee_kobo' => $feeKobo, 'credited_amount_kobo' => $creditKobo]);
             $this->db->commit();
         } catch (\Throwable $throwable) {
             $this->db->rollBack();
             throw $throwable;
         }
-        $this->sendPush((int) $receipt['user_id'], 'Top-up confirmed!', '₦' . number_format($creditKobo / 100, 2) . ' has been added to your wallet.', '/top-up');
+        $this->sendPush((int) $receipt['user_id'], $receipt['type'] === 'upgrade_fee' ? 'Upgrade payment confirmed!' : 'Top-up confirmed!', $receipt['type'] === 'upgrade_fee' ? 'Your upgrade payment was approved for manual processing.' : '₦' . number_format($creditKobo / 100, 2) . ' has been added to your wallet.', '/history');
         Response::success(['approved' => true, 'creditedAmountKobo' => $creditKobo]);
     }
 

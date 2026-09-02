@@ -63,6 +63,9 @@ export const adminApi = {
 
   listTopups: (status = 'pending', limit = 50, offset = 0) =>
     apiFetch(`/api/admin/topups?status=${status}&limit=${limit}&offset=${offset}`),
+  listPendingTransactions: () => apiFetch('/api/admin/transactions/pending'),
+  approveTransaction: (transactionId) => apiFetch(`/api/admin/transactions/${transactionId}/approve`, { method: 'POST' }),
+  rejectTransaction: (transactionId, reason) => apiFetch(`/api/admin/transactions/${transactionId}/reject`, { method: 'POST', body: JSON.stringify({ reason }) }),
   approveTopup: (receiptId) =>
     apiFetch(`/api/admin/topups/${receiptId}/approve`, { method: 'POST' }),
   rejectTopup: (receiptId, reason) =>

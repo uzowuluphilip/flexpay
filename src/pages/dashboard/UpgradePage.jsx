@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, ArrowLeft, ArrowRight, Check, CheckSquare, Copy, Crown, FileUp, Gem, Landmark, Shield, Sparkles, TrendingUp, UploadCloud, X } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import BottomNav from '../../components/dashboard/BottomNav'
-import { getTopupConfig } from '../../lib/api/wallet'
+import { getTopupConfig, submitUpgradeReceipt } from '../../lib/api/wallet'
+import { useAuth } from '../../hooks/useAuth'
 import coatOfArms from '../../assets/brand/nigerian-coat-of-arms-hBXqVrjF.png'
 
 const tiers = [
@@ -60,6 +61,7 @@ export default function UpgradePage() {
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
+  const { token } = useAuth()
 
   useEffect(() => {
     getTopupConfig().then(setConfig).catch(() => setConfig(null))
@@ -84,7 +86,7 @@ export default function UpgradePage() {
     setError('')
   }
 
-  const submitPayment = (event) => {
+  const submitPayment = async (event) => {
     event.preventDefault()
     if (!file) {
       setError('Upload your transfer receipt to continue.')
@@ -94,7 +96,12 @@ export default function UpgradePage() {
       setError('Choose a JPG, PNG, or PDF receipt up to 5MB.')
       return
     }
-    setSubmitted(true)
+    try {
+      await submitUpgradeReceipt(selectedDetails.upgradePrice ?? selectedDetails.rate, selectedDetails.name, file, token)
+      setSubmitted(true)
+    } catch (submitError) {
+      setError(submitError.message || 'Could not submit upgrade receipt.')
+    }
   }
 
   if (stage === 'loading') {

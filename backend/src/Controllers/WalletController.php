@@ -374,19 +374,46 @@ final class WalletController
     public function activity(Request $request): void
     {
         $user = $this->requireUser($request);
-        $stmt = $this->db->prepare('SELECT * FROM activity_feed WHERE user_id = ? ORDER BY created_at DESC LIMIT 15');
+        $stmt = $this->db->prepare(
+            'SELECT t.id, t.type, t.amount_kobo, t.status, t.reference, t.created_at,
+                    COALESCE(wr.status, tr.status, t.status) AS review_status
+             FROM transactions t
+             LEFT JOIN withdrawal_requests wr ON wr.transaction_id = t.id
+             LEFT JOIN topup_receipts tr ON tr.transaction_id = t.id
+             WHERE t.user_id = ?
+             ORDER BY t.created_at DESC
+             LIMIT 50'
+        );
         $stmt->execute([(int) $user['id']]);
         $items = array_map(function (array $row): array {
             $amount = (int) $row['amount_kobo'];
+            $titles = [
+                'top_up' => 'Top-up request',
+                'withdrawal' => 'Withdrawal request',
+                'upgrade_fee' => 'Referral upgrade',
+                'lock_hold' => 'Investment lock',
+                'lock_release' => 'Investment unlock',
+                'welcome_bonus' => 'Welcome bonus',
+                'check_in_bonus' => 'Daily check-in',
+                'task_reward' => 'Task reward',
+                'referral_bonus' => 'Referral reward',
+                'spin_win' => 'Spin reward',
+                'spin_loss' => 'Spin result',
+                'spin_try' => 'Spin result',
+                'admin_adjustment' => 'Admin balance adjustment',
+            ];
+            $status = (string) ($row['review_status'] ?: $row['status']);
+            $status = in_array($status, ['approved', 'paid'], true) ? 'completed' : ($status === 'failed' ? 'rejected' : $status);
             return [
                 'id' => (int) $row['id'],
-                'title' => $row['description'],
-                'description' => $row['description'],
-                'amount' => $amount > 0 ? $amount / 100 : 0,
+                'title' => $titles[$row['type']] ?? ucwords(str_replace('_', ' ', (string) $row['type'])),
+                'description' => 'Reference: ' . $row['reference'],
+                'amount' => abs($amount) / 100,
                 'time' => date('d M, H:i', strtotime($row['created_at'])),
                 'timestamp' => $row['created_at'],
                 'type' => $row['type'],
                 'credit' => $amount >= 0,
+                'status' => $status,
             ];
         }, $stmt->fetchAll());
 
@@ -448,7 +475,9 @@ final class WalletController
 
         $amountKobo = $amountNaira * 100;
         $bonusKobo = $validTiers[$amountNaira];
-        $availableBalanceKobo = $this->getBalanceKobo((int) $user['id']);
+        $availableBalanceKobo = $this->getBalanceKobo((int) $user['id'])
+            - $this->getPendingWithdrawalKobo((int) $user['id'])
+            - $this->getPendingLockKobo((int) $user['id']);
 
         if ($amountKobo > $availableBalanceKobo) {
             Response::error('Insufficient funds for this lock.', 422, 'insufficient_balance');
@@ -460,7 +489,7 @@ final class WalletController
             $reference = 'lock_' . $user['id'] . '_' . time() . '_' . bin2hex(random_bytes(4));
             $this->db->prepare(
                 'INSERT INTO transactions (user_id, wallet_id, type, amount_kobo, status, reference, meta, created_at, updated_at)
-                 VALUES (?, ?, "lock_hold", ?, "completed", ?, ?, NOW(), NOW())'
+                 VALUES (?, ?, "lock_hold", ?, "pending", ?, ?, NOW(), NOW())'
             )->execute([
                 (int) $user['id'],
                 (int) $wallet['id'],
@@ -479,13 +508,6 @@ final class WalletController
             $this->db->rollBack();
             throw $throwable;
         }
-
-        $this->db->prepare(
-            'INSERT INTO activity_feed (user_id, type, description, amount_kobo, created_at)
-             VALUES (?, ?, ?, ?, NOW())'
-        )->execute([(int) $user['id'], 'lock', 'Fund lock created: ₦' . number_format($amountNaira, 0) . ' for 30 days', -$amountKobo]);
-
-        $this->syncWalletBalance((int) $user['id']);
 
         Response::success([
             'lock' => [
@@ -682,6 +704,68 @@ final class WalletController
         ], 201);
     }
 
+    public function submitUpgradeReceipt(Request $request): void
+    {
+        $user = $this->requireUser($request);
+        $amountNaira = (int) round((float) ($_POST['amount'] ?? 0));
+        $tier = trim((string) ($_POST['tier'] ?? ''));
+        $file = $_FILES['receipt'] ?? null;
+
+        if ($amountNaira <= 0 || $amountNaira > 500000 || $tier === '') {
+            Response::error('A valid upgrade tier and payment amount are required.', 422, 'invalid_upgrade');
+        }
+        if (!is_array($file) || (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            Response::error('A receipt file is required.', 422, 'receipt_required');
+        }
+        if ((int) $file['size'] > 5 * 1024 * 1024) {
+            Response::error('Receipt must be 5MB or smaller.', 422, 'receipt_too_large');
+        }
+
+        $mime = (new \finfo(FILEINFO_MIME_TYPE))->file((string) $file['tmp_name']);
+        $allowed = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'application/pdf' => 'pdf'];
+        if (!isset($allowed[$mime])) {
+            Response::error('Receipt must be a JPG, PNG, or PDF file.', 422, 'invalid_receipt_type');
+        }
+
+        $storageDir = dirname(__DIR__, 2) . '/storage/topup-receipts';
+        if (!is_dir($storageDir) && !mkdir($storageDir, 0700, true) && !is_dir($storageDir)) {
+            Response::error('Receipt storage is unavailable.', 500);
+        }
+        $fileName = bin2hex(random_bytes(24)) . '.' . $allowed[$mime];
+        $filePath = $storageDir . '/' . $fileName;
+        if (!move_uploaded_file((string) $file['tmp_name'], $filePath)) {
+            Response::error('Receipt upload could not be saved.', 500);
+        }
+
+        $userId = (int) $user['id'];
+        $wallet = $this->getWalletRow($userId);
+        $amountKobo = $amountNaira * 100;
+        $reference = 'upgrade_' . $userId . '_' . time() . '_' . bin2hex(random_bytes(4));
+
+        $this->db->beginTransaction();
+        try {
+            $this->db->prepare(
+                'INSERT INTO transactions (user_id, wallet_id, type, amount_kobo, status, reference, meta, created_at, updated_at)
+                 VALUES (?, ?, "upgrade_fee", 0, "pending", ?, ?, NOW(), NOW())'
+            )->execute([$userId, (int) $wallet['id'], $reference, json_encode([
+                'tier' => $tier,
+                'claimed_amount_kobo' => $amountKobo,
+            ], JSON_THROW_ON_ERROR)]);
+            $transactionId = (int) $this->db->lastInsertId();
+            $this->db->prepare(
+                'INSERT INTO topup_receipts (user_id, transaction_id, file_path, status, created_at)
+                 VALUES (?, ?, ?, "pending", NOW())'
+            )->execute([$userId, $transactionId, $fileName]);
+            $this->db->commit();
+        } catch (\Throwable $throwable) {
+            $this->db->rollBack();
+            @unlink($filePath);
+            throw $throwable;
+        }
+
+        Response::success(['reference' => $reference, 'status' => 'pending', 'tier' => $tier], 201);
+    }
+
     private function requireUser(Request $request): array
     {
         $token = $request->bearerToken();
@@ -732,6 +816,16 @@ final class WalletController
     {
         $stmt = $this->db->prepare(
             'SELECT COALESCE(SUM(amount_kobo), 0) FROM withdrawal_requests WHERE user_id = ? AND status = "pending"'
+        );
+        $stmt->execute([$userId]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    private function getPendingLockKobo(int $userId): int
+    {
+        $stmt = $this->db->prepare(
+            'SELECT COALESCE(SUM(-amount_kobo), 0) FROM transactions WHERE user_id = ? AND type = "lock_hold" AND status = "pending"'
         );
         $stmt->execute([$userId]);
 

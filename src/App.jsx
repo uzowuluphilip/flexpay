@@ -26,6 +26,7 @@ import AdminUsersPage from './pages/admin/UsersPage'
 import AdminWithdrawalsPage from './pages/admin/WithdrawalsPage'
 import AdminTasksPage from './pages/admin/TasksPage'
 import AdminAchievementsPage from './pages/admin/AchievementsPage'
+import TransactionsPage from './pages/admin/TransactionsPage'
 import TopUpPage from './pages/dashboard/TopUpPage'
 import AdminTopUpsPage from './pages/admin/TopUpsPage'
 import StatusPage from './pages/dashboard/StatusPage'
@@ -82,6 +83,7 @@ function App() {
             <Route path="/admin/topups" element={<AdminProtectedRoute><AdminTopUpsPage /></AdminProtectedRoute>} />
             <Route path="/admin/tasks" element={<AdminProtectedRoute><AdminTasksPage /></AdminProtectedRoute>} />
             <Route path="/admin/achievements" element={<AdminProtectedRoute><AdminAchievementsPage /></AdminProtectedRoute>} />
+            <Route path="/admin/transactions" element={<AdminProtectedRoute><TransactionsPage /></AdminProtectedRoute>} />
             
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

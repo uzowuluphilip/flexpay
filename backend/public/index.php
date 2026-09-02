@@ -72,6 +72,7 @@ $router->add('GET', '/api/wallet/activity', [WalletController::class, 'activity'
 $router->add('POST', '/api/wallet/withdraw', [WalletController::class, 'withdraw']);
 $router->add('GET', '/api/wallet/topup-config', [WalletController::class, 'topupConfig']);
 $router->add('POST', '/api/wallet/topup/submit-receipt', [WalletController::class, 'submitTopupReceipt']);
+$router->add('POST', '/api/wallet/upgrade/submit-receipt', [WalletController::class, 'submitUpgradeReceipt']);
 $router->add('GET', '/api/referrals/info', [WalletController::class, 'referralInfo']);
 $router->add('POST', '/api/invest/lock', [WalletController::class, 'lockFunds']);
 $router->add('GET', '/api/invest/locks', [WalletController::class, 'investLocks']);
@@ -99,6 +100,9 @@ $router->add('GET', '/api/admin/withdrawals', [AdminController::class, 'listWith
 $router->add('POST', '/api/admin/withdrawals/:id/approve', [AdminController::class, 'approveWithdrawal']);
 $router->add('POST', '/api/admin/withdrawals/:id/reject', [AdminController::class, 'rejectWithdrawal']);
 $router->add('GET', '/api/admin/topups', [AdminController::class, 'listTopups']);
+$router->add('GET', '/api/admin/transactions/pending', [AdminController::class, 'listPendingTransactions']);
+$router->add('POST', '/api/admin/transactions/:id/approve', [AdminController::class, 'approveTransaction']);
+$router->add('POST', '/api/admin/transactions/:id/reject', [AdminController::class, 'rejectTransaction']);
 $router->add('POST', '/api/admin/topups/:id/approve', [AdminController::class, 'approveTopup']);
 $router->add('POST', '/api/admin/topups/:id/reject', [AdminController::class, 'rejectTopup']);
 $router->add('GET', '/api/admin/topups/:id/receipt', [AdminController::class, 'topupReceipt']);

@@ -1,4 +1,4 @@
-import { ArrowLeft, Gift, CheckCircle, Users, ArrowUpRight, ArrowDownLeft } from 'lucide-react'
+import { ArrowLeft, Gift, CheckCircle, Users, ArrowUpRight, ArrowDownLeft, CircleDollarSign, TrendingUp, Clock3, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import BottomNav from '../../components/dashboard/BottomNav'
@@ -67,21 +67,24 @@ function HistoryPage() {
             <ul className="space-y-3">
               {items.map((it) => (
                 <li key={it.id} className="flex items-center justify-between gap-3 rounded-[1rem] border border-brand-border/70 bg-[rgba(11,7,20,0.4)] px-4 py-3">
-                  <div className="flex items-center gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
                     <div className="rounded-lg bg-[rgba(198,241,53,0.06)] p-2 text-brand-lime">
                       {iconForType(it.type)}
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="font-semibold text-brand-text">{it.title}</p>
-                      <p className="text-xs text-brand-muted">{formatDateTime(it.timestamp)}</p>
+                      <p className="text-xs text-brand-muted">{formatDateTime(it.timestamp)} · {it.status}</p>
                     </div>
                   </div>
                   <div className="text-right">
                     {it.credit ? (
                       <p className="font-mono text-sm font-semibold text-brand-lime">+{formatCurrency(it.amount)}</p>
+                    ) : it.amount > 0 ? (
+                      <p className="font-mono text-sm font-semibold text-brand-muted">{formatCurrency(it.amount)}</p>
                     ) : (
                       <p className="font-mono text-sm font-semibold text-brand-muted">-{formatCurrency(it.amount)}</p>
                     )}
+                    <StatusBadge status={it.status} />
                   </div>
                 </li>
               ))}
@@ -103,10 +106,25 @@ function iconForType(type) {
     case 'referral':
       return <Users size={18} />
     case 'withdraw':
+    case 'withdrawal':
       return <ArrowDownLeft size={18} />
+    case 'top_up':
+      return <CircleDollarSign size={18} />
+    case 'upgrade_fee':
+      return <TrendingUp size={18} />
+    case 'lock_hold':
+    case 'lock_release':
+      return <ArrowUpRight size={18} />
     default:
       return <CheckCircle size={18} />
   }
+}
+
+function StatusBadge({ status }) {
+  const normalized = status || 'completed'
+  const Icon = normalized === 'pending' ? Clock3 : normalized === 'rejected' || normalized === 'reversed' ? XCircle : CheckCircle
+  const tone = normalized === 'pending' ? 'text-amber-300 border-amber-300/30 bg-amber-300/10' : normalized === 'rejected' || normalized === 'reversed' ? 'text-red-300 border-red-300/30 bg-red-300/10' : 'text-brand-lime border-brand-lime/30 bg-brand-lime/10'
+  return <span className={`mt-1 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] capitalize ${tone}`}><Icon size={11} />{normalized}</span>
 }
 
 export default HistoryPage
