@@ -225,16 +225,41 @@ final class AdminController
             Response::error('Withdrawal not found.', 404);
         }
 
-        $stmt = $this->db->prepare('SELECT * FROM withdrawal_requests WHERE id = ? LIMIT 1');
-        $stmt->execute([$withdrawalId]);
-        $withdrawal = $stmt->fetch();
+        $this->db->beginTransaction();
+        try {
+            $stmt = $this->db->prepare('SELECT * FROM withdrawal_requests WHERE id = ? FOR UPDATE');
+            $stmt->execute([$withdrawalId]);
+            $withdrawal = $stmt->fetch();
 
-        if ($withdrawal === false) {
-            Response::error('Withdrawal not found.', 404);
+            if ($withdrawal === false) {
+                $this->db->rollBack();
+                Response::error('Withdrawal not found.', 404);
+            }
+
+            if ($withdrawal['status'] !== 'pending') {
+                $this->db->rollBack();
+                Response::error('Only pending withdrawals can be approved.', 422);
+            }
+
+            $walletLock = $this->db->prepare('SELECT id FROM wallets WHERE user_id = ? FOR UPDATE');
+            $walletLock->execute([(int) $withdrawal['user_id']]);
+            $balanceStmt = $this->db->prepare('SELECT COALESCE(SUM(amount_kobo), 0) FROM transactions WHERE user_id = ? AND status = "completed"');
+            $balanceStmt->execute([(int) $withdrawal['user_id']]);
+            if ((int) $balanceStmt->fetchColumn() < (int) $withdrawal['amount_kobo']) {
+                $this->db->rollBack();
+                Response::error('Insufficient balance to approve this withdrawal.', 422, 'insufficient_balance');
+            }
+
+            $this->db->prepare('UPDATE withdrawal_requests SET status = "approved", reviewed_by_admin_id = ?, reviewed_at = NOW() WHERE id = ?')->execute([(int) $admin['id'], $withdrawalId]);
+            $this->db->prepare('UPDATE transactions SET status = "completed", updated_at = NOW() WHERE id = ? AND status = "pending"')->execute([(int) $withdrawal['transaction_id']]);
+            $this->db->commit();
+            $this->syncWalletBalance((int) $withdrawal['user_id']);
+        } catch (\Throwable $throwable) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $throwable;
         }
-
-        $this->db->prepare('UPDATE withdrawal_requests SET status = "approved" WHERE id = ?')->execute([$withdrawalId]);
-        $this->db->prepare('UPDATE transactions SET status = "completed" WHERE id = ?')->execute([(int) $withdrawal['transaction_id']]);
 
         $this->logAudit((int) $admin['id'], 'withdrawal.approve', 'withdrawal_request', $withdrawalId, ['amount_kobo' => $withdrawal['amount_kobo']]);
         $this->sendPush((int) $withdrawal['user_id'], 'Withdrawal approved!', '₦' . number_format(((int) $withdrawal['amount_kobo']) / 100, 2) . ' is on its way.', '/withdraw');
@@ -265,11 +290,14 @@ final class AdminController
             Response::error('Withdrawal not found.', 404);
         }
 
-        $this->db->prepare('UPDATE withdrawal_requests SET status = "rejected", rejection_reason = ? WHERE id = ?')->execute([$reason, $withdrawalId]);
-        $this->db->prepare('UPDATE transactions SET status = "reversed" WHERE id = ?')->execute([(int) $withdrawal['transaction_id']]);
+        if ($withdrawal['status'] !== 'pending') {
+            Response::error('Only pending withdrawals can be rejected.', 422);
+        }
 
-        // Marking withdrawal as "reversed" automatically excludes it from balance sum in getBalanceKobo(),
-        // which restores the deducted amount. Sync wallet to update balance.
+        $this->db->prepare('UPDATE withdrawal_requests SET status = "rejected", rejection_reason = ?, reviewed_by_admin_id = ?, reviewed_at = NOW() WHERE id = ?')->execute([$reason, (int) $admin['id'], $withdrawalId]);
+        if (!empty($withdrawal['transaction_id'])) {
+            $this->db->prepare('UPDATE transactions SET status = "reversed", updated_at = NOW() WHERE id = ? AND status = "pending"')->execute([(int) $withdrawal['transaction_id']]);
+        }
         $this->syncWalletBalance((int) $withdrawal['user_id']);
 
         $this->logAudit((int) $admin['id'], 'withdrawal.reject', 'withdrawal_request', $withdrawalId, ['amount_kobo' => $withdrawal['amount_kobo'], 'reason' => $reason]);
@@ -561,7 +589,7 @@ final class AdminController
     private function getBalanceKobo(int $userId): int
     {
         $stmt = $this->db->prepare(
-            'SELECT COALESCE(SUM(amount_kobo), 0) FROM transactions WHERE user_id = ? AND (status = "completed" OR (status = "pending" AND type <> "top_up"))'
+            'SELECT COALESCE(SUM(amount_kobo), 0) FROM transactions WHERE user_id = ? AND status = "completed"'
         );
         $stmt->execute([$userId]);
 

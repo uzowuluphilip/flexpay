@@ -541,7 +541,9 @@ final class WalletController
             Response::error('Bank name, account number, and account name are required.', 422);
         }
 
-        $availableBalanceKobo = $this->getBalanceKobo((int) $user['id']);
+        $userId = (int) $user['id'];
+        $balanceKobo = $this->getBalanceKobo($userId);
+        $availableBalanceKobo = $balanceKobo - $this->getPendingWithdrawalKobo($userId);
 
         if ($amount > $availableBalanceKobo) {
             $availableBalanceNaira = $availableBalanceKobo / 100;
@@ -552,7 +554,7 @@ final class WalletController
             );
         }
 
-        $wallet = $this->getWalletRow((int) $user['id']);
+        $wallet = $this->getWalletRow($userId);
 
         $reference = 'wd_' . $user['id'] . '_' . time() . '_' . bin2hex(random_bytes(4));
         $meta = json_encode([
@@ -572,7 +574,7 @@ final class WalletController
              VALUES (?, ?, ?, ?, ?, ?, "pending", NOW())'
         )->execute([(int) $user['id'], $transactionId, $amount, $bankName, $accountNumber, $accountName]);
 
-        $this->syncWalletBalance((int) $user['id']);
+        $this->syncWalletBalance($userId);
 
         Response::success([
             'withdrawal' => [
@@ -580,7 +582,7 @@ final class WalletController
                 'status' => 'pending',
                 'reference' => $reference,
             ],
-            'balance' => $this->getBalanceKobo((int) $user['id']) / 100,
+            'balance' => $balanceKobo / 100,
         ]);
     }
 
@@ -719,7 +721,17 @@ final class WalletController
     private function getBalanceKobo(int $userId): int
     {
         $stmt = $this->db->prepare(
-            'SELECT COALESCE(SUM(amount_kobo), 0) FROM transactions WHERE user_id = ? AND (status = "completed" OR (status = "pending" AND type <> "top_up"))'
+            'SELECT COALESCE(SUM(amount_kobo), 0) FROM transactions WHERE user_id = ? AND status = "completed"'
+        );
+        $stmt->execute([$userId]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    private function getPendingWithdrawalKobo(int $userId): int
+    {
+        $stmt = $this->db->prepare(
+            'SELECT COALESCE(SUM(amount_kobo), 0) FROM withdrawal_requests WHERE user_id = ? AND status = "pending"'
         );
         $stmt->execute([$userId]);
 
