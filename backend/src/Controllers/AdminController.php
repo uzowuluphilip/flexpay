@@ -34,8 +34,11 @@ final class AdminController
 
         $totalUsers = (int) $this->db->query('SELECT COUNT(*) FROM users')->fetchColumn();
         $verifiedUsers = (int) $this->db->query('SELECT COUNT(*) FROM users WHERE email_verified_at IS NOT NULL')->fetchColumn();
+        $bannedUsers = (int) $this->db->query('SELECT COUNT(*) FROM users WHERE status = "banned"')->fetchColumn();
         $platformBalance = (int) $this->db->query('SELECT COALESCE(SUM(balance_kobo), 0) FROM wallets')->fetchColumn();
         $pendingWithdrawals = (int) $this->db->query('SELECT COUNT(*) FROM withdrawal_requests WHERE status = "pending"')->fetchColumn();
+        $approvedWithdrawals = (int) $this->db->query('SELECT COUNT(*) FROM withdrawal_requests WHERE status IN ("approved", "paid")')->fetchColumn();
+        $rejectedWithdrawals = (int) $this->db->query('SELECT COUNT(*) FROM withdrawal_requests WHERE status = "rejected"')->fetchColumn();
         $totalPendingAmount = (int) $this->db->query('SELECT COALESCE(SUM(amount_kobo), 0) FROM withdrawal_requests WHERE status = "pending"')->fetchColumn();
         $todaySignups = (int) $this->db->query('SELECT COUNT(*) FROM users WHERE DATE(created_at) = CURDATE()')->fetchColumn();
         $todayTaskCompletions = (int) $this->db->query('SELECT COUNT(*) FROM task_completions WHERE DATE(completed_at) = CURDATE()')->fetchColumn();
@@ -43,8 +46,11 @@ final class AdminController
         Response::success([
             'totalUsers' => $totalUsers,
             'verifiedUsers' => $verifiedUsers,
+            'bannedUsers' => $bannedUsers,
             'platformBalance' => $platformBalance / 100,
             'pendingWithdrawals' => $pendingWithdrawals,
+            'approvedWithdrawals' => $approvedWithdrawals,
+            'rejectedWithdrawals' => $rejectedWithdrawals,
             'totalPendingAmount' => $totalPendingAmount / 100,
             'todaySignups' => $todaySignups,
             'todayTaskCompletions' => $todayTaskCompletions,
