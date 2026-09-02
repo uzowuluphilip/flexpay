@@ -99,7 +99,7 @@ function ReferralProgram() {
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {[
             { label: 'Telegram', color: 'bg-[#24A1DE]', icon: telegramLogo, href: 'https://t.me/OFFICIALFLEXPAY' },
-            { label: 'WhatsApp', color: 'bg-[#25D366]', icon: MessageCircle },
+            { label: 'WhatsApp', color: 'bg-[#25D366]', icon: MessageCircle, href: 'https://whatsapp.com/channel/0029VbDqaE5HAdNNxVvH1d1V' },
             { label: 'Instagram', color: 'bg-gradient-to-br from-[#F58529] via-[#DD2A7B] to-[#8134AF]', icon: Camera },
             { label: 'LinkedIn', color: 'bg-[#0A66C2]', icon: BriefcaseBusiness },
             { label: 'TikTok', color: 'bg-[#111111]', icon: Music2 },
@@ -119,7 +119,7 @@ function ReferralProgram() {
             )
 
             return href ? (
-              <a key={label} href={href} target="_blank" rel="noreferrer" aria-label="Open official FlexPay Telegram channel" className="flex flex-col items-center justify-center rounded-[1.25rem] border border-brand-border/70 bg-[rgba(21,15,46,0.9)] p-3 text-center text-sm text-brand-text">
+              <a key={label} href={href} target="_blank" rel="noreferrer" aria-label={`Open official FlexPay ${label} channel`} className="flex flex-col items-center justify-center rounded-[1.25rem] border border-brand-border/70 bg-[rgba(21,15,46,0.9)] p-3 text-center text-sm text-brand-text">
                 {content}
               </a>
             ) : (
