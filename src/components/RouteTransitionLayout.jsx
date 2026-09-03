@@ -1,52 +1,21 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useLocation } from 'react-router-dom'
 import logoIcon from '../assets/brand/flexpay-icon.svg'
 
-const routeSplashDuration = 920
-
 function RouteTransitionLayout({ children }) {
   const location = useLocation()
-  const [renderLocation, setRenderLocation] = useState(location)
   const [isTransitioning, setIsTransitioning] = useState(false)
-  const [pendingLocation, setPendingLocation] = useState(null)
-  const initialMount = useRef(true)
-  const timerRef = useRef(null)
 
   useEffect(() => {
-    if (initialMount.current) {
-      initialMount.current = false
-      setRenderLocation(location)
-      return
-    }
-
-    if (location.pathname === renderLocation.pathname && location.search === renderLocation.search && location.hash === renderLocation.hash) {
-      return
-    }
-
-    setPendingLocation(location)
     setIsTransitioning(true)
-
-    if (timerRef.current) {
-      window.clearTimeout(timerRef.current)
-    }
-
-    timerRef.current = window.setTimeout(() => {
-      setRenderLocation(location)
-      setIsTransitioning(false)
-      setPendingLocation(null)
-    }, routeSplashDuration)
-
-    return () => {
-      if (timerRef.current) {
-        window.clearTimeout(timerRef.current)
-      }
-    }
-  }, [location, renderLocation])
+    const timer = window.setTimeout(() => setIsTransitioning(false), 180)
+    return () => window.clearTimeout(timer)
+  }, [location.key])
 
   return (
     <>
-      {children && React.cloneElement(children, { location: renderLocation })}
+      {children}
 
       <AnimatePresence mode="wait">
         {isTransitioning && (
