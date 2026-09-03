@@ -13,7 +13,9 @@ export default function TransactionsPage() {
   const [busy, setBusy] = useState(false)
 
   const load = () => adminApi.listPendingTransactions().then((data) => setTransactions(data.transactions || [])).catch((err) => setError(err.message))
-  useEffect(load, [])
+  useEffect(() => {
+    load()
+  }, [])
 
   const review = async (transaction, action) => {
     setBusy(true)
