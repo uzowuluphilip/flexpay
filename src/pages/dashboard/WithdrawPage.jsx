@@ -13,6 +13,7 @@ function clampPercent(value, target) {
 
 function WithdrawPage() {
   const navigate = useNavigate()
+  const [tab, setTab] = useState('referrals')
   const [progress, setProgress] = useState(initialProgress)
   const [amount, setAmount] = useState('')
   const [bankName, setBankName] = useState('')
@@ -71,6 +72,7 @@ function WithdrawPage() {
           <section className="rounded-[1.25rem] border border-brand-border/60 bg-brand-panel/90 p-4 shadow-[0_16px_40px_rgba(0,0,0,0.18)] sm:p-5">
             <div className="flex items-center justify-between gap-3"><div className="flex items-center gap-2"><ShieldCheck className="text-brand-lime" size={20} /><h2 className="text-lg font-semibold">Unlock requirements</h2></div><p className="shrink-0 text-sm font-semibold text-brand-lime">{completedRequirements} of {requirements.length}</p></div>
             <p className="mt-1 text-sm text-brand-muted">Unlock badges as you go. These progress goals are informational and never block withdrawals.</p>
+            <div className="mt-4 inline-flex rounded-full border border-brand-border/70 bg-[rgba(11,7,20,0.5)] p-1"><button type="button" onClick={() => setTab('referrals')} className={`min-h-11 rounded-full px-4 text-sm font-semibold ${tab === 'referrals' ? 'bg-gradient-to-r from-brand-lime to-brand-lime-light text-brand-base' : 'text-brand-muted'}`}>With Referrals</button><button type="button" onClick={() => setTab('none')} className={`min-h-11 rounded-full px-4 text-sm font-semibold ${tab === 'none' ? 'bg-gradient-to-r from-brand-lime to-brand-lime-light text-brand-base' : 'text-brand-muted'}`}>No Referrals</button></div>
             <div className="mt-4 rounded-[0.85rem] border border-brand-border/60 bg-[rgba(11,7,20,0.4)] p-4"><div className="space-y-5">{requirements.map((item) => <RequirementRow key={item.title} {...item} />)}</div></div>
             <div className="mt-4 flex gap-3"><button type="button" onClick={() => navigate('/tasks')} className="min-h-11 flex-1 rounded-full bg-[rgba(198,241,53,0.1)] px-4 py-2 text-sm font-semibold text-brand-lime">Do tasks</button><button type="button" onClick={() => navigate('/referrals')} className="min-h-11 flex-1 rounded-full border border-brand-border/70 bg-[rgba(255,255,255,0.02)] px-4 py-2 text-sm font-semibold">Invite friends</button></div>
           </section>
