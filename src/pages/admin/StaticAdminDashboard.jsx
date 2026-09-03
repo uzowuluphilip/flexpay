@@ -20,10 +20,16 @@ export default function StaticAdminDashboard() {
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const [overview, setOverview] = useState(null)
+  const [latestPending, setLatestPending] = useState(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    adminApi.getOverview().then(setOverview).catch((requestError) => setError(requestError.message))
+    Promise.all([adminApi.getOverview(), adminApi.listPendingTransactions()])
+      .then(([overviewData, pendingData]) => {
+        setOverview(overviewData)
+        setLatestPending(pendingData.transactions?.[0] || null)
+      })
+      .catch((requestError) => setError(requestError.message))
   }, [])
 
   return (
@@ -49,14 +55,27 @@ export default function StaticAdminDashboard() {
           {stats.map(([label, value, note, Icon, danger]) => <article key={label} className={`static-admin-stat ${danger ? 'is-danger' : ''}`}><div className="static-admin-stat-label"><Icon size={13} /><span>{label}</span></div><strong>{overview ? overview[value] : '...'}</strong>{note ? <small>{note}</small> : null}{label === 'Banned Accounts' ? <Ban className="static-admin-ban" size={22} /> : null}</article>)}
         </section>
 
-        <div className="static-admin-section-head"><h1>Recent Pending</h1><button type="button" onClick={() => navigate('/admin/withdrawals')}>View all <ChevronRight size={13} /></button></div>
+        <div className="static-admin-section-head"><h1>Recent Pending</h1><button type="button" onClick={() => navigate('/admin/transactions')}>View all <ChevronRight size={13} /></button></div>
         {error ? <p className="static-admin-error">{error}</p> : null}
-        <article className="static-admin-pending">
-          <div className="static-admin-pending-top"><div><h2>okereke anthony chimakpa</h2><p>anthonylenorah@gmail.com</p><span>Withdrawal · Verify (₦7,200)</span></div><b>Pending</b></div>
-          <div className="static-admin-pending-details"><strong>₦7,200</strong><span>26/06/2026 · 12:54</span></div>
-          <div className="static-admin-receipt"><div className="static-admin-receipt-brand"><span>Moniepoint</span><i>₦</i></div><div className="static-admin-receipt-paper"><strong>₦7,950.00</strong><span>Transfer successful</span><span>Recipient · FlexPay</span><span>Reference · 204891</span></div></div>
-        </article>
+        {latestPending ? <PendingTransactionCard transaction={latestPending} /> : <p className="static-admin-empty">No pending transactions</p>}
       </main>
     </div>
   )
+}
+
+function PendingTransactionCard({ transaction }) {
+  const meta = JSON.parse(transaction.meta || '{}')
+  const typeLabels = { top_up: 'Top-up', withdrawal: 'Withdrawal', upgrade_fee: 'Upgrade', lock_hold: 'Investment' }
+  const amountKobo = transaction.type === 'top_up' ? Number(meta.claimed_amount_kobo || transaction.amount_kobo) : Number(transaction.amount_kobo)
+  const detail = transaction.bank_name
+    ? `${transaction.bank_name} · ${transaction.account_number} · ${transaction.account_name}`
+    : transaction.type === 'upgrade_fee'
+      ? `${meta.tier || 'Upgrade'} payment`
+      : transaction.type === 'lock_hold' ? `${(Math.abs(amountKobo) / 100).toLocaleString('en-NG')} locked for 30 days` : 'Receipt attached'
+
+  return <article className="static-admin-pending">
+    <div className="static-admin-pending-top"><div><h2>{transaction.full_name}</h2><p>{transaction.email}</p><span>{typeLabels[transaction.type] || transaction.type} · Pending</span></div><b>Pending</b></div>
+    <div className="static-admin-pending-details"><strong>₦{(Math.abs(amountKobo) / 100).toLocaleString('en-NG')}</strong><span>{new Date(transaction.created_at).toLocaleString('en-NG')}</span></div>
+    <div className="static-admin-receipt"><div className="static-admin-receipt-brand"><span>{detail}</span><i>₦</i></div><div className="static-admin-receipt-paper"><strong>{typeLabels[transaction.type] || 'Transaction'}</strong><span>{detail}</span><span>Reference · {transaction.reference}</span><span>Awaiting admin review</span></div></div>
+  </article>
 }

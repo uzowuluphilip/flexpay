@@ -358,7 +358,7 @@ final class AdminController
              LEFT JOIN topup_receipts tr ON tr.transaction_id = t.id
              LEFT JOIN withdrawal_requests wr ON wr.transaction_id = t.id
              WHERE t.status = "pending"
-             ORDER BY t.created_at ASC'
+             ORDER BY t.created_at DESC'
         );
         Response::success(['transactions' => $stmt->fetchAll()]);
     }
