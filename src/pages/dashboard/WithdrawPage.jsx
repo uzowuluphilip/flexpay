@@ -28,12 +28,18 @@ function WithdrawPage() {
     getWithdrawProgress().then(setProgress).catch((err) => setError(err.message)).finally(() => setLoading(false))
   }, [])
 
-  const requirements = [
-    { icon: <Users size={18} />, title: 'Referrals invited', description: 'Invite 10 people with your referral link', value: progress.referrals, target: 10, text: `${progress.referrals} / 10` },
-    { icon: <ListChecks size={18} />, title: 'Tasks completed', description: 'Complete 7 daily tasks', value: progress.tasks, target: 7, text: `${progress.tasks} / 7` },
-    { icon: <Clipboard size={18} />, title: 'Claims made', description: 'Make 5 claims from your dashboard', value: progress.claims, target: 5, text: `${progress.claims} / 5` },
-    { icon: <CreditCard size={18} />, title: 'Account balance', description: 'Reach a balance of ₦200,000', value: progress.balance, target: 200000, text: `₦${progress.balance.toLocaleString()} / ₦200,000` },
-  ]
+  const requirements = tab === 'referrals'
+    ? [
+      { icon: <Users size={18} />, title: 'Referrals invited', description: 'Invite 10 people with your referral link', value: progress.referrals, target: 10, text: `${progress.referrals} / 10` },
+      { icon: <ListChecks size={18} />, title: 'Tasks completed', description: 'Complete 7 daily tasks', value: progress.tasks, target: 7, text: `${progress.tasks} / 7` },
+      { icon: <Clipboard size={18} />, title: 'Claims made', description: 'Make 5 claims from your dashboard', value: progress.claims, target: 5, text: `${progress.claims} / 5` },
+      { icon: <CreditCard size={18} />, title: 'Account balance', description: 'Reach a balance of ₦200,000', value: progress.balance, target: 200000, text: `₦${progress.balance.toLocaleString()} / ₦200,000` },
+    ]
+    : [
+      { icon: <ListChecks size={18} />, title: 'Tasks completed', description: 'Complete 15 daily tasks (no referrals needed)', value: progress.tasks, target: 15, text: `${progress.tasks} / 15` },
+      { icon: <Clipboard size={18} />, title: 'Claims made', description: 'Make 10 claims from your dashboard', value: progress.claims, target: 10, text: `${progress.claims} / 10` },
+      { icon: <CreditCard size={18} />, title: 'Account balance', description: 'Reach a balance of ₦200,000', value: progress.balance, target: 200000, text: `₦${progress.balance.toLocaleString()} / ₦200,000` },
+    ]
   const completedRequirements = requirements.filter((item) => item.value >= item.target).length
   const withdrawalUnlocked = completedRequirements === requirements.length
 
