@@ -196,6 +196,12 @@ export default function UpgradePage() {
 
 function LoadingStage({ tier }) {
   const upgradePrice = tier.upgradePrice ?? tier.rate
+  const [progress, setProgress] = useState(0)
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setProgress(100))
+    return () => window.cancelAnimationFrame(frame)
+  }, [])
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-brand-base px-4 pb-24 text-brand-text">
@@ -203,7 +209,7 @@ function LoadingStage({ tier }) {
         <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-full border-2 border-emerald-400/40 text-emerald-400 shadow-[0_0_0_7px_rgba(16,185,129,0.06)]"><Landmark size={48} /></div>
         <h1 className="mt-8 bg-gradient-to-r from-emerald-400 to-sky-400 bg-clip-text text-2xl font-bold text-transparent">Generating Account<br />Number</h1>
         <p className="mt-4 text-sm text-brand-muted">Preparing a secure payment account for<br /><span className="font-semibold text-brand-text">{formatNaira(upgradePrice)}</span></p>
-        <div className="mt-7 h-2 overflow-hidden rounded-full bg-brand-panel"><div className="h-full w-1/2 animate-pulse bg-gradient-to-r from-emerald-400 to-sky-400" /></div>
+        <div className="mt-7 h-2 overflow-hidden rounded-full bg-brand-panel"><div className="h-full bg-gradient-to-r from-emerald-400 to-sky-400 transition-[width] duration-[2000ms] linear" style={{ width: `${progress}%` }} /></div>
         <p className="mt-3 text-xs text-brand-muted">Generating account number...</p>
         <p className="mt-7 text-xs text-emerald-400">Manual payment review applies after receipt upload.</p>
       </section>

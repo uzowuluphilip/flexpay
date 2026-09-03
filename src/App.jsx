@@ -32,6 +32,7 @@ import AdminTopUpsPage from './pages/admin/TopUpsPage'
 import StatusPage from './pages/dashboard/StatusPage'
 import AchievementsPage from './pages/dashboard/AchievementsPage'
 import SpinPage from './pages/dashboard/SpinPage'
+import LeadersPage from './pages/dashboard/LeadersPage'
 import WithdrawalActivityToast from './components/WithdrawalActivityToast'
 import NotificationPrompt from './components/NotificationPrompt'
 import RequestStatusToast from './components/RequestStatusToast'
@@ -62,7 +63,7 @@ function App() {
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
               <Route path="/support" element={<ProtectedRoute><SupportPage /></ProtectedRoute>} />
               <Route path="/community" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
-              <Route path="/leaders" element={<ProtectedRoute><PlaceholderPage title="Leaders" description="Leaderboard details are coming soon. Check back when the ranking page is ready." /></ProtectedRoute>} />
+              <Route path="/leaders" element={<ProtectedRoute><LeadersPage /></ProtectedRoute>} />
               <Route path="/transactions" element={<ProtectedRoute><PlaceholderPage title="History" description="Transaction history is coming soon. We’ll add the full feed and filters here next." /></ProtectedRoute>} />
               <Route path="/withdraw" element={<ProtectedRoute><WithdrawPage /></ProtectedRoute>} />
               <Route path="/top-up" element={<ProtectedRoute><TopUpPage /></ProtectedRoute>} />
