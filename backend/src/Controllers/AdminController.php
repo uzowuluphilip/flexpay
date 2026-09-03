@@ -505,12 +505,57 @@ final class AdminController
     public function topupReceipt(Request $request, array $params = []): void
     {
         $this->requireAdmin($request);
-        $stmt = $this->db->prepare('SELECT file_path FROM topup_receipts WHERE id = ? LIMIT 1');
+        $stmt = $this->db->prepare('SELECT file_path, receipt_data, receipt_mime FROM topup_receipts WHERE id = ? LIMIT 1');
         $stmt->execute([(int) ($params['id'] ?? 0)]);
-        $fileName = $stmt->fetchColumn();
+        $receipt = $stmt->fetch();
+        if ($receipt === false) {
+            Response::error('Receipt not found.', 404);
+        }
+
+        if ($receipt['receipt_data'] !== null && $receipt['receipt_data'] !== '') {
+            header('Content-Type: ' . ((string) $receipt['receipt_mime'] ?: 'application/octet-stream'));
+            header('Content-Length: ' . strlen($receipt['receipt_data']));
+            echo $receipt['receipt_data'];
+            exit;
+        }
+
+        $fileName = $receipt['file_path'];
         $filePath = dirname(__DIR__, 2) . '/storage/topup-receipts/' . basename((string) $fileName);
         if (!$fileName || !is_file($filePath)) {
             Response::error('Receipt file not found.', 404);
+        }
+        $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($filePath) ?: 'application/octet-stream';
+        header('Content-Type: ' . $mime);
+        header('Content-Length: ' . filesize($filePath));
+        readfile($filePath);
+        exit;
+    }
+
+    public function transactionReceipt(Request $request, array $params = []): void
+    {
+        $this->requireAdmin($request);
+        $stmt = $this->db->prepare(
+            'SELECT tr.file_path, tr.receipt_data, tr.receipt_mime
+             FROM topup_receipts tr
+             JOIN transactions t ON t.id = tr.transaction_id
+             WHERE t.id = ? LIMIT 1'
+        );
+        $stmt->execute([(int) ($params['id'] ?? 0)]);
+        $receipt = $stmt->fetch();
+        if ($receipt === false) {
+            Response::error('Receipt not found for this transaction.', 404);
+        }
+
+        if ($receipt['receipt_data'] !== null && $receipt['receipt_data'] !== '') {
+            header('Content-Type: ' . ((string) $receipt['receipt_mime'] ?: 'application/octet-stream'));
+            header('Content-Length: ' . strlen($receipt['receipt_data']));
+            echo $receipt['receipt_data'];
+            exit;
+        }
+
+        $filePath = dirname(__DIR__, 2) . '/storage/topup-receipts/' . basename((string) $receipt['file_path']);
+        if (!is_file($filePath)) {
+            Response::error('Receipt file is unavailable for this transaction.', 404);
         }
         $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($filePath) ?: 'application/octet-stream';
         header('Content-Type: ' . $mime);

@@ -66,6 +66,14 @@ export const adminApi = {
   listPendingTransactions: () => apiFetch('/api/admin/transactions/pending'),
   approveTransaction: (transactionId) => apiFetch(`/api/admin/transactions/${transactionId}/approve`, { method: 'POST' }),
   rejectTransaction: (transactionId, reason) => apiFetch(`/api/admin/transactions/${transactionId}/reject`, { method: 'POST', body: JSON.stringify({ reason }) }),
+  fetchTransactionReceipt: async (transactionId) => {
+    const response = await fetch(`${API_BASE_URL}/api/admin/transactions/${transactionId}/receipt`, {
+      headers: { Authorization: `Bearer ${getAdminToken()}` },
+    })
+    if (!response.ok) throw new Error('Receipt could not be loaded for this transaction.')
+    const blob = await response.blob()
+    return { url: URL.createObjectURL(blob), type: blob.type }
+  },
   approveTopup: (receiptId) =>
     apiFetch(`/api/admin/topups/${receiptId}/approve`, { method: 'POST' }),
   rejectTopup: (receiptId, reason) =>

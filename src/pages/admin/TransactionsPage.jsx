@@ -37,7 +37,7 @@ export default function TransactionsPage() {
   const showReceipt = async (transaction) => {
     if (!transaction.receipt_id) return
     try {
-      setPreview(await adminApi.fetchReceipt(transaction.receipt_id))
+      setPreview(await adminApi.fetchTransactionReceipt(transaction.id))
     } catch (err) {
       setError(err.message)
     }

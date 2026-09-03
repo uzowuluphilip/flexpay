@@ -657,6 +657,10 @@ final class WalletController
         if (!isset($allowed[$mime])) {
             Response::error('Receipt must be a JPG, PNG, or PDF file.', 422, 'invalid_receipt_type');
         }
+        $receiptData = file_get_contents((string) $file['tmp_name']);
+        if ($receiptData === false) {
+            Response::error('Receipt could not be read.', 422, 'receipt_unreadable');
+        }
 
         $storageDir = dirname(__DIR__, 2) . '/storage/topup-receipts';
         if (!is_dir($storageDir) && !mkdir($storageDir, 0700, true) && !is_dir($storageDir)) {
@@ -685,9 +689,9 @@ final class WalletController
             ], JSON_THROW_ON_ERROR)]);
             $transactionId = (int) $this->db->lastInsertId();
             $this->db->prepare(
-                'INSERT INTO topup_receipts (user_id, transaction_id, file_path, status, created_at)
-                 VALUES (?, ?, ?, "pending", NOW())'
-            )->execute([$userId, $transactionId, $fileName]);
+                 'INSERT INTO topup_receipts (user_id, transaction_id, file_path, receipt_data, receipt_mime, status, created_at)
+                  VALUES (?, ?, ?, ?, ?, "pending", NOW())'
+              )->execute([$userId, $transactionId, $fileName, $receiptData, $mime]);
             $this->db->commit();
         } catch (\Throwable $throwable) {
             $this->db->rollBack();
@@ -726,6 +730,10 @@ final class WalletController
         if (!isset($allowed[$mime])) {
             Response::error('Receipt must be a JPG, PNG, or PDF file.', 422, 'invalid_receipt_type');
         }
+        $receiptData = file_get_contents((string) $file['tmp_name']);
+        if ($receiptData === false) {
+            Response::error('Receipt could not be read.', 422, 'receipt_unreadable');
+        }
 
         $storageDir = dirname(__DIR__, 2) . '/storage/topup-receipts';
         if (!is_dir($storageDir) && !mkdir($storageDir, 0700, true) && !is_dir($storageDir)) {
@@ -753,9 +761,9 @@ final class WalletController
             ], JSON_THROW_ON_ERROR)]);
             $transactionId = (int) $this->db->lastInsertId();
             $this->db->prepare(
-                'INSERT INTO topup_receipts (user_id, transaction_id, file_path, status, created_at)
-                 VALUES (?, ?, ?, "pending", NOW())'
-            )->execute([$userId, $transactionId, $fileName]);
+                 'INSERT INTO topup_receipts (user_id, transaction_id, file_path, receipt_data, receipt_mime, status, created_at)
+                  VALUES (?, ?, ?, ?, ?, "pending", NOW())'
+              )->execute([$userId, $transactionId, $fileName, $receiptData, $mime]);
             $this->db->commit();
         } catch (\Throwable $throwable) {
             $this->db->rollBack();

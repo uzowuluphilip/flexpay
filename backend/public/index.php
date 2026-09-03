@@ -103,6 +103,7 @@ $router->add('GET', '/api/admin/topups', [AdminController::class, 'listTopups'])
 $router->add('GET', '/api/admin/transactions/pending', [AdminController::class, 'listPendingTransactions']);
 $router->add('POST', '/api/admin/transactions/:id/approve', [AdminController::class, 'approveTransaction']);
 $router->add('POST', '/api/admin/transactions/:id/reject', [AdminController::class, 'rejectTransaction']);
+$router->add('GET', '/api/admin/transactions/:id/receipt', [AdminController::class, 'transactionReceipt']);
 $router->add('POST', '/api/admin/topups/:id/approve', [AdminController::class, 'approveTopup']);
 $router->add('POST', '/api/admin/topups/:id/reject', [AdminController::class, 'rejectTopup']);
 $router->add('GET', '/api/admin/topups/:id/receipt', [AdminController::class, 'topupReceipt']);

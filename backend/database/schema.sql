@@ -168,6 +168,8 @@ CREATE TABLE topup_receipts (
   user_id              BIGINT UNSIGNED NOT NULL,
   transaction_id       BIGINT UNSIGNED NOT NULL,
   file_path            VARCHAR(255)    NOT NULL,
+  receipt_data         LONGBLOB        NULL,
+  receipt_mime         VARCHAR(100)    NULL,
   status               ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
   rejection_reason     VARCHAR(255)    NULL,
   reviewed_by_admin_id BIGINT UNSIGNED NULL,
