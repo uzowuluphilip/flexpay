@@ -36,10 +36,10 @@ final class AdminController
         $verifiedUsers = (int) $this->db->query('SELECT COUNT(*) FROM users WHERE email_verified_at IS NOT NULL')->fetchColumn();
         $bannedUsers = (int) $this->db->query('SELECT COUNT(*) FROM users WHERE status IN ("banned", "suspended")')->fetchColumn();
         $platformBalance = (int) $this->db->query('SELECT COALESCE(SUM(balance_kobo), 0) FROM wallets')->fetchColumn();
-        $pendingWithdrawals = (int) $this->db->query('SELECT COUNT(*) FROM withdrawal_requests WHERE status = "pending"')->fetchColumn();
+        $pendingTransactions = (int) $this->db->query('SELECT COUNT(DISTINCT id) FROM transactions WHERE status = "pending"')->fetchColumn();
         $approvedWithdrawals = (int) $this->db->query('SELECT COUNT(*) FROM withdrawal_requests WHERE status IN ("approved", "paid")')->fetchColumn();
         $rejectedWithdrawals = (int) $this->db->query('SELECT COUNT(*) FROM withdrawal_requests WHERE status = "rejected"')->fetchColumn();
-        $totalPendingAmount = (int) $this->db->query('SELECT COALESCE(SUM(amount_kobo), 0) FROM withdrawal_requests WHERE status = "pending"')->fetchColumn();
+        $totalPendingAmount = (int) $this->db->query('SELECT COALESCE(SUM(amount_kobo), 0) FROM transactions WHERE status = "pending"')->fetchColumn();
         $todaySignups = (int) $this->db->query('SELECT COUNT(*) FROM users WHERE DATE(created_at) = CURDATE()')->fetchColumn();
         $todayTaskCompletions = (int) $this->db->query('SELECT COUNT(*) FROM task_completions WHERE DATE(completed_at) = CURDATE()')->fetchColumn();
 
@@ -48,7 +48,8 @@ final class AdminController
             'verifiedUsers' => $verifiedUsers,
             'bannedUsers' => $bannedUsers,
             'platformBalance' => $platformBalance / 100,
-            'pendingWithdrawals' => $pendingWithdrawals,
+            'pendingTransactions' => $pendingTransactions,
+            'pendingWithdrawals' => $pendingTransactions,
             'approvedWithdrawals' => $approvedWithdrawals,
             'rejectedWithdrawals' => $rejectedWithdrawals,
             'totalPendingAmount' => $totalPendingAmount / 100,

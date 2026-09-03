@@ -12,7 +12,7 @@ const navigation = [
 
 const paymentLinks = [['Nexora Key', KeyRound, '0'], ['Withdraw Verify', Eye, '1'], ['Upgrade Payment', Link2, '0'], ['Final Payment', WalletCards, '0']]
 const stats = [
-  ['Total Users', 'totalUsers', 'All registered accounts', Users, false], ['Pending', 'pendingWithdrawals', 'Requires action', CircleDollarSign, false],
+  ['Total Users', 'totalUsers', 'All registered accounts', Users, false], ['Pending', 'pendingTransactions', 'Requires action', CircleDollarSign, false],
   ['Approved', 'approvedWithdrawals', '', ShieldCheck, false], ['Rejected', 'rejectedWithdrawals', '', X, true], ['Banned Accounts', 'bannedUsers', '', Ban, false],
 ]
 
@@ -23,13 +23,19 @@ export default function StaticAdminDashboard() {
   const [latestPending, setLatestPending] = useState(null)
   const [error, setError] = useState('')
 
+  const loadDashboard = async () => {
+    setError('')
+    try {
+      const [overviewData, pendingData] = await Promise.all([adminApi.getOverview(), adminApi.listPendingTransactions()])
+      setOverview(overviewData)
+      setLatestPending(pendingData.transactions?.[0] || null)
+    } catch (requestError) {
+      setError(requestError.message)
+    }
+  }
+
   useEffect(() => {
-    Promise.all([adminApi.getOverview(), adminApi.listPendingTransactions()])
-      .then(([overviewData, pendingData]) => {
-        setOverview(overviewData)
-        setLatestPending(pendingData.transactions?.[0] || null)
-      })
-      .catch((requestError) => setError(requestError.message))
+    loadDashboard()
   }, [])
 
   return (
@@ -37,7 +43,7 @@ export default function StaticAdminDashboard() {
       <header className="static-admin-mobile-header">
         <button type="button" className="static-admin-icon" onClick={() => setMenuOpen(true)} aria-label="Open admin menu"><Menu size={18} /></button>
         <div><p className="static-admin-brand">Admin Panel</p><p className="static-admin-kicker">System overview</p></div>
-        <div className="static-admin-actions"><button type="button" className="static-admin-icon static-admin-icon-accent" aria-label="Refresh dashboard"><RotateCcw size={15} /></button><span className="static-admin-access"><i /> Root access</span></div>
+        <div className="static-admin-actions"><button type="button" className="static-admin-icon static-admin-icon-accent" onClick={loadDashboard} aria-label="Refresh dashboard"><RotateCcw size={15} /></button><span className="static-admin-access"><i /> Root access</span></div>
       </header>
 
       <aside className={`static-admin-sidebar ${menuOpen ? 'is-open' : ''}`}>
