@@ -49,6 +49,7 @@ export default function AdminUsersPage() {
     try {
       setIsAdjusting(true);
       await adminApi.adjustBalance(selectedUser.user.id, parseFloat(adjustAmount), adjustReason);
+      localStorage.setItem('flexpay-wallet-updated', `${selectedUser.user.id}:${Date.now()}`);
       setShowAdjustBalance(false);
       setAdjustAmount('');
       setAdjustReason('');

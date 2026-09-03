@@ -219,6 +219,36 @@ function HomePage() {
     loadDashboard()
   }, [])
 
+  useEffect(() => {
+    let active = true
+
+    const refreshWallet = async () => {
+      if (document.visibilityState !== 'visible') return
+      try {
+        const walletData = await getWalletSummary()
+        if (!active) return
+        setWallet(walletData)
+      } catch { }
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') refreshWallet()
+    }
+
+    const handleWalletUpdate = () => refreshWallet()
+
+    const interval = window.setInterval(refreshWallet, 10000)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('storage', handleWalletUpdate)
+
+    return () => {
+      active = false
+      window.clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('storage', handleWalletUpdate)
+    }
+  }, [])
+
   const balanceLabel = useMemo(() => (balanceVisible ? formatDisplayAmount(wallet.balance, displayCurrency, exchangeRate) : '••••••'), [balanceVisible, wallet.balance, displayCurrency, exchangeRate])
   const perReferralLabel = useMemo(() => formatDisplayAmount(wallet.perReferral, displayCurrency, exchangeRate), [wallet.perReferral, displayCurrency, exchangeRate])
   const liveRateText = displayCurrency === 'USD' ? `Live rate: 1 USD = ₦${Number(exchangeRate).toLocaleString('en-NG')}` : ''
