@@ -55,6 +55,45 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
 
 Database::getInstance();
 
+$database = Database::getInstance()->getConnection();
+$database->exec(
+    'CREATE TABLE IF NOT EXISTS push_subscriptions (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        user_id BIGINT UNSIGNED NOT NULL,
+        endpoint VARCHAR(500) NOT NULL,
+        p256dh_key VARCHAR(255) NOT NULL,
+        auth_key VARCHAR(255) NOT NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uq_push_subscriptions_endpoint (endpoint(255)),
+        KEY idx_push_subscriptions_user (user_id),
+        CONSTRAINT fk_push_subscriptions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
+);
+$database->exec(
+    'CREATE TABLE IF NOT EXISTS notifications (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        user_id BIGINT UNSIGNED NOT NULL,
+        title VARCHAR(150) NOT NULL,
+        message VARCHAR(500) NOT NULL,
+        type VARCHAR(40) NOT NULL DEFAULT "general",
+        link VARCHAR(255) NULL,
+        is_read TINYINT(1) NOT NULL DEFAULT 0,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_notifications_user (user_id),
+        KEY idx_notifications_created_at (created_at),
+        CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
+);
+
+// Keep receipt storage columns available on databases created before uploads stored file data in MySQL.
+$receiptColumns = $database->query("SHOW COLUMNS FROM topup_receipts")->fetchAll(\PDO::FETCH_COLUMN);
+if (!in_array('receipt_data', $receiptColumns, true)) {
+    $database->exec('ALTER TABLE topup_receipts ADD COLUMN receipt_data LONGBLOB NULL AFTER file_path');
+}
+if (!in_array('receipt_mime', $receiptColumns, true)) {
+    $database->exec('ALTER TABLE topup_receipts ADD COLUMN receipt_mime VARCHAR(100) NULL AFTER receipt_data');
+}
+
 $router = new Router();
 $router->add('POST', '/api/auth/register', [AuthController::class, 'register']);
 $router->add('POST', '/api/auth/login', [AuthController::class, 'login']);

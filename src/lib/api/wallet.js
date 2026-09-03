@@ -48,7 +48,17 @@ async function uploadRequest(path, formData, token = null) {
     body: formData,
     credentials: 'include',
   })
-  const payload = await response.json()
+  const rawText = await response.text()
+  let payload = {}
+
+  if (rawText) {
+    try {
+      payload = JSON.parse(rawText)
+    } catch {
+      throw new Error(`Request failed (${response.status}): ${rawText.slice(0, 180)}`)
+    }
+  }
+
   if (!response.ok || payload.success === false) {
     throw new Error(payload.error || 'Something went wrong. Please try again.')
   }

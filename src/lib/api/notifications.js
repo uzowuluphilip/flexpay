@@ -20,7 +20,17 @@ async function apiRequest(path, { method = 'GET', body, token = null } = {}) {
     credentials: 'include',
   })
 
-  const payload = await response.json().catch(() => ({}))
+  const rawText = await response.text()
+  let payload = {}
+
+  if (rawText) {
+    try {
+      payload = JSON.parse(rawText)
+    } catch {
+      throw new Error(`Request failed (${response.status}): ${rawText.slice(0, 180)}`)
+    }
+  }
+
   if (!response.ok || payload.success === false) {
     throw new Error(payload.error || 'Request failed.')
   }
