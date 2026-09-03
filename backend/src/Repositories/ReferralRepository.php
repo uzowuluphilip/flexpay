@@ -55,7 +55,8 @@ final class ReferralRepository
         $walletStmt->execute([$referrerUserId]);
         $wallet = $walletStmt->fetch() ?: ['id' => 0];
 
-        $this->db->beginTransaction();
+        $ownsTransaction = !$this->db->inTransaction();
+        if ($ownsTransaction) $this->db->beginTransaction();
         try {
             $stmt = $this->db->prepare('UPDATE referrals SET status = "active", bonus_amount_kobo = ? WHERE referred_user_id = ? AND status = "pending"');
             $stmt->execute([$bonusKobo, $referredUserId]);
@@ -63,9 +64,9 @@ final class ReferralRepository
             $this->db->prepare('INSERT INTO transactions (user_id, wallet_id, type, amount_kobo, status, reference, meta, created_at, updated_at) VALUES (?, ?, "referral_bonus", ?, "completed", ?, ?, NOW(), NOW())')->execute([$referrerUserId, (int) $wallet['id'], $bonusKobo, $reference, json_encode(['referred_user_id' => $referredUserId, 'trigger' => 'first_real_action'], JSON_THROW_ON_ERROR)]);
             $this->db->prepare('INSERT INTO activity_feed (user_id, type, description, amount_kobo, created_at) VALUES (?, ?, ?, ?, NOW())')->execute([$referrerUserId, 'referral', 'Referral bonus: ' . $referredName . ' became active', $bonusKobo]);
             $milestones = $this->ensureMilestoneBonusesForUser($referrerUserId);
-            $this->db->commit();
+            if ($ownsTransaction) $this->db->commit();
         } catch (\Throwable $throwable) {
-            $this->db->rollBack();
+            if ($ownsTransaction && $this->db->inTransaction()) $this->db->rollBack();
             throw $throwable;
         }
 

@@ -263,6 +263,7 @@ CREATE TABLE task_completions (
   task_id       BIGINT UNSIGNED NOT NULL,
   reward_kobo   BIGINT          NOT NULL,
   completed_at  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_task_completion_user_task (user_id, task_id),
   KEY idx_task_completions_user (user_id),
   CONSTRAINT fk_task_completions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   CONSTRAINT fk_task_completions_task FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE

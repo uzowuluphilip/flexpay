@@ -68,39 +68,50 @@ final class TasksController
             Response::error('Task not found.', 404);
         }
 
-        if ($this->hasCompletedTask((int) $user['id'], $taskId)) {
-            Response::success(['verified' => true, 'already_completed' => true]);
+        $this->db->beginTransaction();
+        try {
+            $completionStmt = $this->db->prepare(
+                'SELECT 1 FROM task_completions WHERE user_id = ? AND task_id = ? FOR UPDATE'
+            );
+            $completionStmt->execute([(int) $user['id'], $taskId]);
+            if ($completionStmt->fetchColumn() !== false) {
+                $this->db->commit();
+                Response::success(['verified' => true, 'already_completed' => true]);
+            }
+
+            $wallet = $this->getWalletRow((int) $user['id']);
+            $rewardKobo = (int) $task['reward_kobo'];
+            $this->db->prepare(
+                'INSERT INTO task_completions (user_id, task_id, reward_kobo, completed_at)
+                 VALUES (?, ?, ?, NOW())'
+            )->execute([(int) $user['id'], $taskId, $rewardKobo]);
+
+            $referralRepo = new \FlexPay\Repositories\ReferralRepository();
+            $referralRepo->activateReferralForFirstRealAction((int) $user['id'], (string) $user['full_name']);
+
+            $reference = 'task_' . $taskId . '_' . $user['id'] . '_' . time();
+            $this->db->prepare(
+                'INSERT INTO transactions (user_id, wallet_id, type, amount_kobo, status, reference, meta, created_at, updated_at)
+                 VALUES (?, ?, "task_reward", ?, "completed", ?, ?, NOW(), NOW())'
+            )->execute([
+                (int) $user['id'],
+                (int) $wallet['id'],
+                $rewardKobo,
+                $reference,
+                json_encode(['task_id' => $taskId], JSON_THROW_ON_ERROR),
+            ]);
+
+            $this->db->prepare(
+                'INSERT INTO activity_feed (user_id, type, description, amount_kobo, created_at)
+                 VALUES (?, ?, ?, ?, NOW())'
+            )->execute([(int) $user['id'], 'task', 'Task reward earned: ' . $task['title'], $rewardKobo]);
+
+            $this->syncWalletBalance((int) $user['id']);
+            $this->db->commit();
+        } catch (\Throwable $throwable) {
+            if ($this->db->inTransaction()) $this->db->rollBack();
+            throw $throwable;
         }
-
-        $wallet = $this->getWalletRow((int) $user['id']);
-        $rewardKobo = (int) $task['reward_kobo'];
-
-        $this->db->prepare(
-            'INSERT INTO task_completions (user_id, task_id, reward_kobo, completed_at)
-             VALUES (?, ?, ?, NOW())'
-        )->execute([(int) $user['id'], $taskId, $rewardKobo]);
-
-        $referralRepo = new \FlexPay\Repositories\ReferralRepository();
-        $referralRepo->activateReferralForFirstRealAction((int) $user['id'], (string) $user['full_name']);
-
-        $reference = 'task_' . $taskId . '_' . $user['id'] . '_' . time();
-        $this->db->prepare(
-            'INSERT INTO transactions (user_id, wallet_id, type, amount_kobo, status, reference, meta, created_at, updated_at)
-             VALUES (?, ?, "task_reward", ?, "completed", ?, ?, NOW(), NOW())'
-        )->execute([
-            (int) $user['id'],
-            (int) $wallet['id'],
-            $rewardKobo,
-            $reference,
-            json_encode(['task_id' => $taskId], JSON_THROW_ON_ERROR),
-        ]);
-
-        $this->db->prepare(
-            'INSERT INTO activity_feed (user_id, type, description, amount_kobo, created_at)
-             VALUES (?, ?, ?, ?, NOW())'
-        )->execute([(int) $user['id'], 'task', 'Task reward earned: ' . $task['title'], $rewardKobo]);
-
-        $this->syncWalletBalance((int) $user['id']);
 
         Response::success([
             'verified' => true,

@@ -1,14 +1,15 @@
 import { ArrowLeft, Check, CircleDollarSign } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import BottomNav from '../../components/dashboard/BottomNav'
 import CurrencyDisplayToggle from '../../components/dashboard/CurrencyDisplayToggle'
 import '../../styles/wave-bounce.css'
-import { tasks as taskDefinitions, verifyTask } from '../../lib/api/tasks'
+import { getTasks, tasks as taskDefinitions, verifyTask } from '../../lib/api/tasks'
 import { getExchangeRate, getWalletSummary } from '../../lib/api/wallet'
 import { formatDisplayAmount, getStoredDisplayCurrency } from '../../lib/currency'
 
 function DailyTasksPage() {
+  const [availableTasks, setAvailableTasks] = useState(taskDefinitions)
   const [taskState, setTaskState] = useState(
     taskDefinitions.reduce((acc, task) => {
       acc[task.id] = { status: 'start', loading: false }
@@ -19,7 +20,7 @@ function DailyTasksPage() {
   const [exchangeRate, setExchangeRate] = useState(1359)
   const [displayCurrency, setDisplayCurrency] = useState(getStoredDisplayCurrency())
 
-  useMemo(() => {
+  useEffect(() => {
     let active = true
     getExchangeRate().then((rate) => {
       if (active) setExchangeRate(rate)
@@ -27,7 +28,7 @@ function DailyTasksPage() {
     return () => { active = false }
   }, [])
 
-  useMemo(() => {
+  useEffect(() => {
     let active = true
     getWalletSummary().then((data) => {
       if (active) {
@@ -42,25 +43,48 @@ function DailyTasksPage() {
     return () => { active = false }
   }, [])
 
+  useEffect(() => {
+    let active = true
+    getTasks().then((serverTasks) => {
+      if (!active || !Array.isArray(serverTasks) || serverTasks.length === 0) return
+
+      const serverTaskByTitle = new Map(serverTasks.map((task) => [task.title, task]))
+      const mergedTasks = taskDefinitions
+        .map((task) => ({ ...task, serverId: serverTaskByTitle.get(task.title)?.id }))
+        .filter((task) => task.serverId !== undefined)
+
+      setAvailableTasks(mergedTasks)
+      setTaskState(mergedTasks.reduce((state, task) => {
+        state[task.id] = {
+          status: serverTaskByTitle.get(task.title)?.completed ? 'claimed' : 'start',
+          loading: false,
+        }
+        return state
+      }, {}))
+    }).catch(() => undefined)
+
+    return () => { active = false }
+  }, [])
+
   const completedCount = useMemo(
     () => Object.values(taskState).filter((task) => task.status === 'claimed').length,
     [taskState]
   )
 
   const totalPool = useMemo(
-    () => taskDefinitions.reduce((sum, task) => sum + task.rewardAmount, 0),
-    []
+    () => availableTasks.reduce((sum, task) => sum + task.rewardAmount, 0),
+    [availableTasks]
   )
   const totalPoolLabel = useMemo(() => formatDisplayAmount(totalPool, displayCurrency, exchangeRate), [totalPool, displayCurrency, exchangeRate])
 
   const completedReward = useMemo(
-    () => taskDefinitions.reduce((sum, task) => {
+    () => availableTasks.reduce((sum, task) => {
       return taskState[task.id]?.status === 'claimed' ? sum + task.rewardAmount : sum
     }, 0),
-    [taskState]
+    [availableTasks, taskState]
   )
 
-  const completedPercent = Math.round((completedCount / taskDefinitions.length) * 100)
+  const completedPercent = availableTasks.length === 0 ? 0 : Math.round((completedCount / availableTasks.length) * 100)
 
   const handleStart = (task) => {
     window.open(task.url, '_blank', 'noopener,noreferrer')
@@ -76,7 +100,15 @@ function DailyTasksPage() {
       [task.id]: { status: 'verify', loading: true },
     }))
 
-    await verifyTask(task.id)
+    try {
+      await verifyTask(task.serverId)
+    } catch (error) {
+      setTaskState((current) => ({
+        ...current,
+        [task.id]: { status: 'verify', loading: false, error: error.message },
+      }))
+      return
+    }
 
     const completed = JSON.parse(window.localStorage.getItem('flexpay-completed-tasks') || '[]')
     if (!completed.includes(task.id)) {
@@ -149,7 +181,7 @@ function DailyTasksPage() {
                 <p className="text-xs uppercase tracking-[0.35em] text-brand-lime">EARN EVERY DAY</p>
                 <h2 className="mt-3 text-2xl font-semibold text-brand-text">Task Center</h2>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-brand-muted">
-                  {completedCount}/{taskDefinitions.length} completed · resets every 24h
+                  {completedCount}/{availableTasks.length} completed · resets every 24h
                 </p>
               </div>
             </div>
@@ -161,7 +193,7 @@ function DailyTasksPage() {
               </div>
               <div className="rounded-[1.5rem] border border-brand-border/70 bg-[rgba(21,15,46,0.92)] p-4">
                 <p className="text-[11px] uppercase tracking-[0.28em] text-brand-muted">Available now</p>
-                <p className="mt-3 text-3xl font-semibold text-brand-text">{taskDefinitions.length} tasks</p>
+                <p className="mt-3 text-3xl font-semibold text-brand-text">{availableTasks.length} tasks</p>
               </div>
               <div className="rounded-[1.5rem] border border-brand-border/70 bg-[rgba(21,15,46,0.92)] p-4">
                 <p className="text-[11px] uppercase tracking-[0.28em] text-brand-muted">Your balance</p>
@@ -178,12 +210,12 @@ function DailyTasksPage() {
               <h2 className="mt-2 text-xl font-semibold text-brand-text">Complete tasks to earn more</h2>
             </div>
             <span className="rounded-full border border-brand-lime/30 bg-[rgba(198,241,53,0.08)] px-3 py-2 text-sm font-semibold text-brand-lime">
-              {taskDefinitions.length} tasks available
+              {availableTasks.length} tasks available
             </span>
           </div>
 
           <div className="space-y-4">
-            {taskDefinitions.map((task, index) => {
+            {availableTasks.map((task, index) => {
               const state = taskState[task.id]
               const isVerify = state.status === 'verify'
               const isClaimed = state.status === 'claimed'
@@ -207,7 +239,7 @@ function DailyTasksPage() {
                     <div>
                       {isClaimed ? (
                         <div className="inline-flex items-center rounded-full border border-brand-lime/30 bg-[rgba(198,241,53,0.08)] px-4 py-2 text-sm font-semibold text-brand-lime">
-                          Claimed
+                          Completed
                         </div>
                       ) : (
                         <button
@@ -218,6 +250,7 @@ function DailyTasksPage() {
                           {state.loading ? 'Verifying…' : isVerify ? 'Verify' : 'Start'}
                         </button>
                       )}
+                      {state.error ? <p className="mt-2 max-w-xs text-xs text-red-300">{state.error}</p> : null}
                     </div>
                   </div>
                 </div>
