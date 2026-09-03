@@ -10,7 +10,7 @@ const navigation = [
   ['Master Key', KeyRound, '/admin', null], ['Balances', WalletCards, '/admin/users', null], ['Transactions', WalletCards, '/admin/transactions', null],
 ]
 
-const paymentLinks = [['Nexora Key', KeyRound, '0'], ['Withdraw Verify', Eye, '1'], ['Upgrade Payment', Link2, '0'], ['Final Payment', WalletCards, '0']]
+const paymentLinks = [['Flexpay Key', KeyRound, '0'], ['Withdraw Verify', Eye, '1'], ['Upgrade Payment', Link2, '0'], ['Final Payment', WalletCards, '0']]
 const stats = [
   ['Total Users', 'totalUsers', 'All registered accounts', Users, false], ['Pending', 'pendingTransactions', 'Requires action', CircleDollarSign, false],
   ['Approved', 'approvedWithdrawals', '', ShieldCheck, false], ['Rejected', 'rejectedWithdrawals', '', X, true], ['Banned Accounts', 'bannedUsers', '', Ban, false],

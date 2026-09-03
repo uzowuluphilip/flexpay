@@ -57,6 +57,7 @@ export default function TopUpPage() {
     try {
       setBusy(true)
       await submitTopupReceipt(numericAmount, file, token)
+      window.dispatchEvent(new CustomEvent('flexpay-request-submitted', { detail: { type: 'topup' } }))
       setSubmitted(true)
       window.setTimeout(() => navigate('/home'), 1200)
     } catch (err) {

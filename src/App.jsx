@@ -34,6 +34,7 @@ import AchievementsPage from './pages/dashboard/AchievementsPage'
 import SpinPage from './pages/dashboard/SpinPage'
 import WithdrawalActivityToast from './components/WithdrawalActivityToast'
 import NotificationPrompt from './components/NotificationPrompt'
+import RequestStatusToast from './components/RequestStatusToast'
 import OnboardingPage from './pages/auth/OnboardingPage'
 import UpgradePage from './pages/dashboard/UpgradePage'
 
@@ -90,6 +91,7 @@ function App() {
         </RouteTransitionLayout>
         <WithdrawalActivityToast />
         <NotificationPrompt />
+        <RequestStatusToast />
       </Router>
       </AdminAuthProvider>
     </AuthProvider>

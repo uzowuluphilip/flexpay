@@ -98,6 +98,7 @@ export default function UpgradePage() {
     }
     try {
       await submitUpgradeReceipt(selectedDetails.upgradePrice ?? selectedDetails.rate, selectedDetails.name, file, token)
+      window.dispatchEvent(new CustomEvent('flexpay-request-submitted', { detail: { type: 'upgrade' } }))
       setSubmitted(true)
     } catch (submitError) {
       setError(submitError.message || 'Could not submit upgrade receipt.')

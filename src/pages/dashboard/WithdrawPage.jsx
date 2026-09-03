@@ -44,6 +44,7 @@ function WithdrawPage() {
     setSubmitting(true)
     try {
       const result = await submitWithdrawal({ amount, bank_name: bankName, account_number: accountNumber, account_name: accountName })
+      window.dispatchEvent(new CustomEvent('flexpay-request-submitted', { detail: { type: 'withdrawal' } }))
       setMessage(`Withdrawal request submitted: ₦${Number(result.withdrawal?.amount ?? amount).toLocaleString()}`)
       setAmount('')
     } catch (err) {
