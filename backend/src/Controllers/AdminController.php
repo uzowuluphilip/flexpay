@@ -377,6 +377,7 @@ final class AdminController
                 $this->db->rollBack();
                 Response::error('Pending transaction not found.', 404);
             }
+            $transactionMeta = json_decode((string) ($transaction['meta'] ?? '{}'), true) ?: [];
 
             if ($transaction['type'] === 'top_up') {
                 $meta = json_decode((string) ($transaction['meta'] ?? '{}'), true) ?: [];
@@ -405,6 +406,7 @@ final class AdminController
                 $this->db->prepare('UPDATE transactions SET status = "completed", updated_at = NOW() WHERE id = ?')->execute([$transactionId]);
             }
             if ($transaction['type'] === 'upgrade_fee') {
+                $this->applyApprovedReferralTier((int) $transaction['user_id'], (string) ($transactionMeta['tier'] ?? ''));
                 $this->db->prepare('UPDATE topup_receipts SET status = "approved", reviewed_by_admin_id = ?, reviewed_at = NOW() WHERE transaction_id = ? AND status = "pending"')->execute([(int) $admin['id'], $transactionId]);
             }
             $this->syncWalletBalance((int) $transaction['user_id']);
@@ -459,6 +461,9 @@ final class AdminController
         try {
             $this->db->prepare('UPDATE transactions SET amount_kobo = ?, status = "completed", meta = JSON_SET(COALESCE(meta, JSON_OBJECT()), "$.claimed_amount_kobo", ?, "$.fee_kobo", ?, "$.credited_amount_kobo", ?) WHERE id = ? AND status = "pending"')->execute([$creditKobo, $claimedKobo, $feeKobo, $creditKobo, (int) $receipt['transaction_id']]);
             $this->db->prepare('UPDATE topup_receipts SET status = "approved", reviewed_by_admin_id = ?, reviewed_at = NOW() WHERE id = ? AND status = "pending"')->execute([(int) $admin['id'], $receiptId]);
+            if ($receipt['type'] === 'upgrade_fee') {
+                $this->applyApprovedReferralTier((int) $receipt['user_id'], (string) ($transactionMeta['tier'] ?? ''));
+            }
             if ($receipt['type'] !== 'upgrade_fee') {
                 $this->db->prepare('INSERT INTO activity_feed (user_id, type, description, amount_kobo, created_at) VALUES (?, "top_up", ?, ?, NOW())')->execute([(int) $receipt['user_id'], 'Top-up approved after receipt review', $creditKobo]);
                 $this->syncWalletBalance((int) $receipt['user_id']);
@@ -718,6 +723,17 @@ final class AdminController
             $targetId,
             json_encode($meta, JSON_THROW_ON_ERROR),
         ]);
+    }
+
+    private function applyApprovedReferralTier(int $userId, string $tier): void
+    {
+        $rates = ['Silver' => 2500000, 'Gold' => 3000000, 'Platinum' => 3500000, 'Diamond' => 4000000];
+        if (!isset($rates[$tier])) {
+            throw new \RuntimeException('Invalid referral upgrade tier.');
+        }
+
+        $this->db->prepare('UPDATE users SET referral_tier = ?, referral_rate_kobo = ?, updated_at = NOW() WHERE id = ?')
+            ->execute([strtoupper($tier), $rates[$tier], $userId]);
     }
 
     private function sendPush(int $userId, string $title, string $body, string $url): void

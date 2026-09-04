@@ -71,6 +71,7 @@ export async function getWalletSummary() {
     balance: Number(data.balance ?? 0),
     referralsActive: Number(data.referralsActive ?? 0),
     perReferral: Number(data.perReferral ?? 0),
+    referralTier: data.referralTier || 'STARTER',
     verified: Boolean(data.verified ?? true),
   }
 }
@@ -206,6 +207,7 @@ export async function getReferralInfo() {
     progress: data.progress || {},
     message: data.message || '',
     perReferral: Number(data.perReferral ?? 15000),
+    referralTier: data.referralTier || 'STARTER',
   }
 }
 

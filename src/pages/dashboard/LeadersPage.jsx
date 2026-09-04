@@ -4,11 +4,15 @@ import BottomNav from '../../components/dashboard/BottomNav'
 
 const leaders = [
   { name: 'Mr a***n', wins: 25, total: 13700000, rank: 1 },
-  { name: 'S***l A***y S***m', wins: 7, total: 5400000, rank: 2 },
-  { name: 'Mr M****k', wins: 6, total: 5100000, rank: 3 },
-  { name: 'A***o E***l A***a', wins: 14, total: 4400000, rank: 4 },
+  { name: 'A***o E***l A***a', wins: 14, total: 4400000, rank: 2 },
+  { name: 'S***l A***y S***m', wins: 7, total: 5400000, rank: 3 },
+  { name: 'Mr M****k', wins: 6, total: 5100000, rank: 4 },
   { name: 'I***O J***E H***F', wins: 5, total: 3500000, rank: 5 },
   { name: 'D***i O***a', wins: 4, total: 2800000, rank: 6 },
+  { name: 'K***e N***i', wins: 3, total: 2100000, rank: 7 },
+  { name: 'F***l A***u', wins: 2, total: 1600000, rank: 8 },
+  { name: 'T***m O***o', wins: 1, total: 900000, rank: 9 },
+  { name: 'B***i S***n', wins: 1, total: 650000, rank: 10 },
 ]
 
 const rankStyles = {

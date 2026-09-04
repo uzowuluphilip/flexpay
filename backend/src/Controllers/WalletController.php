@@ -39,7 +39,8 @@ final class WalletController
         Response::success([
             'balance' => $balanceKobo / 100,
             'referralsActive' => $activeReferrals,
-            'perReferral' => 15000,
+            'perReferral' => ((int) $user['referral_rate_kobo']) / 100,
+            'referralTier' => (string) ($user['referral_tier'] ?? 'STARTER'),
             'verified' => !empty($user['email_verified_at']),
         ]);
     }
@@ -452,7 +453,8 @@ final class WalletController
             'count' => $referralCount,
             'milestones' => $milestones,
             'progress' => $progress,
-            'perReferral' => 15000,
+            'perReferral' => ((int) $user['referral_rate_kobo']) / 100,
+            'referralTier' => (string) ($user['referral_tier'] ?? 'STARTER'),
             'message' => $message,
         ]);
     }
@@ -715,6 +717,10 @@ final class WalletController
         $tier = trim((string) ($_POST['tier'] ?? ''));
         $file = $_FILES['receipt'] ?? null;
 
+        $tierRates = ['Silver' => 25000, 'Gold' => 30000, 'Platinum' => 35000, 'Diamond' => 40000];
+        if (!isset($tierRates[$tier]) || $amountNaira !== $tierRates[$tier]) {
+            Response::error('The upgrade tier and payment amount do not match.', 422, 'invalid_upgrade');
+        }
         if ($amountNaira <= 0 || $amountNaira > 500000 || $tier === '') {
             Response::error('A valid upgrade tier and payment amount are required.', 422, 'invalid_upgrade');
         }

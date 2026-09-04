@@ -44,6 +44,8 @@ CREATE TABLE users (
   password_hash       VARCHAR(255)        NOT NULL,
   referral_code       VARCHAR(20)         NOT NULL,
   referred_by_user_id BIGINT UNSIGNED     NULL,
+  referral_tier       VARCHAR(20)         NOT NULL DEFAULT 'STARTER',
+  referral_rate_kobo  BIGINT UNSIGNED     NOT NULL DEFAULT 1500000,
   email_verified_at   DATETIME            NULL,
   status              ENUM('active','suspended','banned') NOT NULL DEFAULT 'active',
   last_login_at       DATETIME            NULL,

@@ -50,7 +50,9 @@ final class ReferralRepository
         if ($pendingReferral === null) return;
 
         $referrerUserId = (int) $pendingReferral['referrer_user_id'];
-        $bonusKobo = 1500000;
+        $rateStmt = $this->db->prepare('SELECT referral_rate_kobo FROM users WHERE id = ? LIMIT 1');
+        $rateStmt->execute([$referrerUserId]);
+        $bonusKobo = max(0, (int) $rateStmt->fetchColumn());
         $walletStmt = $this->db->prepare('SELECT * FROM wallets WHERE user_id = ? LIMIT 1');
         $walletStmt->execute([$referrerUserId]);
         $wallet = $walletStmt->fetch() ?: ['id' => 0];
@@ -70,7 +72,7 @@ final class ReferralRepository
             throw $throwable;
         }
 
-        $this->sendPush($referrerUserId, 'Referral bonus earned', 'You earned ₦15,000 - your referral just got active!', '/referrals');
+        $this->sendPush($referrerUserId, 'Referral bonus earned', 'You earned ₦' . number_format($bonusKobo / 100) . ' - your referral just got active!', '/referrals');
         foreach ($milestones as $milestone) {
             $this->sendPush($referrerUserId, 'Milestone unlocked!', '₦' . number_format($milestone['reward_kobo'] / 100, 2) . ' bonus credited.', '/referrals');
         }

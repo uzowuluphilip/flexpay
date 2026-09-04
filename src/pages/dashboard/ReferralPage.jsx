@@ -23,7 +23,7 @@ const milestoneRewards = [
 
 function ReferralPage() {
   const { session } = useAuth()
-  const [wallet, setWallet] = useState({ balance: 0, referralsActive: 0, perReferral: 0, verified: true })
+  const [wallet, setWallet] = useState({ balance: 0, referralsActive: 0, perReferral: 15000, referralTier: 'STARTER', verified: true })
   const [referralInfo, setReferralInfo] = useState(null)
   const [exhangeRate, setExchangeRate] = useState(1359)
   const [displayCurrency, setDisplayCurrency] = useState(getStoredDisplayCurrency())

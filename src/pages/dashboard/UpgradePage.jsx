@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, ArrowLeft, ArrowRight, Check, CheckSquare, Copy, Crown, FileUp, Gem, Landmark, Shield, Sparkles, TrendingUp, UploadCloud, X } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import BottomNav from '../../components/dashboard/BottomNav'
-import { getTopupConfig, submitUpgradeReceipt } from '../../lib/api/wallet'
+import { getTopupConfig, getWalletSummary, submitUpgradeReceipt } from '../../lib/api/wallet'
 import { useAuth } from '../../hooks/useAuth'
 import coatOfArms from '../../assets/brand/nigerian-coat-of-arms-hBXqVrjF.png'
 
@@ -57,6 +57,7 @@ export default function UpgradePage() {
   const [selectedTier, setSelectedTier] = useState(null)
   const [stage, setStage] = useState('select')
   const [config, setConfig] = useState(null)
+  const [currentReferral, setCurrentReferral] = useState({ amount: 15000, tier: 'STARTER' })
   const [file, setFile] = useState(null)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
@@ -65,6 +66,7 @@ export default function UpgradePage() {
 
   useEffect(() => {
     getTopupConfig().then(setConfig).catch(() => setConfig(null))
+    getWalletSummary().then((wallet) => setCurrentReferral({ amount: wallet.perReferral || 15000, tier: wallet.referralTier || 'STARTER' })).catch(() => undefined)
   }, [])
 
   useEffect(() => {
@@ -134,8 +136,8 @@ export default function UpgradePage() {
           <div className="pointer-events-none absolute -left-24 top-0 h-64 w-64 -rotate-45 bg-gradient-to-br from-emerald-400/10 to-transparent blur-2xl" />
           <section className="relative overflow-hidden rounded-[1.75rem] border border-emerald-400/35 bg-gradient-to-br from-emerald-500/20 via-[#123d3b] to-[#10263a] p-6 shadow-[0_18px_50px_rgba(16,185,129,0.12)] sm:p-7">
             <p className="text-xs uppercase tracking-[0.28em] text-brand-muted">Current earnings per referral</p>
-            <p className="mt-2 font-mono text-4xl font-bold tracking-tight text-sky-400 sm:text-5xl">₦15,000</p>
-            <p className="mt-3 text-sm text-brand-muted">Pick a tier below to raise this rate for life.</p>
+            <p className="mt-2 font-mono text-4xl font-bold tracking-tight text-sky-400 sm:text-5xl">{formatNaira(currentReferral.amount)}</p>
+            <p className="mt-3 text-sm text-brand-muted">{currentReferral.tier} tier · Pick a tier below to raise this rate for life.</p>
           </section>
 
           <section className="relative mt-7 grid grid-cols-2 gap-3 sm:gap-4">
