@@ -1,4 +1,5 @@
-import { createContext, useCallback, useMemo, useState } from 'react'
+import { createContext, useCallback, useEffect, useMemo, useState } from 'react'
+import { getCurrentUser } from './api/auth'
 
 export const AuthContext = createContext(null)
 
@@ -13,6 +14,40 @@ export function AuthProvider({ children }) {
     if (typeof window === 'undefined') return null
     return window.localStorage.getItem('flexpay-token') || null
   })
+
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    let active = true
+
+    const validateSession = async () => {
+      if (!token) {
+        if (active) setIsLoading(false)
+        return
+      }
+
+      try {
+        const result = await getCurrentUser()
+        if (active && result.user) {
+          setSession(result.user)
+        }
+      } catch {
+        if (active) {
+          setSession(null)
+          setToken(null)
+          window.localStorage.removeItem('flexpay-session')
+          window.localStorage.removeItem('flexpay-token')
+        }
+      } finally {
+        if (active) setIsLoading(false)
+      }
+    }
+
+    validateSession()
+    return () => {
+      active = false
+    }
+  }, [])
 
   const signIn = useCallback((user, nextToken = null) => {
     const safeUser = user && typeof user === 'object' && user.user ? user.user : user
@@ -58,12 +93,13 @@ export function AuthProvider({ children }) {
   const value = useMemo(() => ({
     session,
     token,
+    isLoading,
     signIn,
     signOut,
     logout,
     setSession,
     setToken,
-  }), [session, token, signIn, signOut, logout])
+  }), [session, token, isLoading, signIn, signOut, logout])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
