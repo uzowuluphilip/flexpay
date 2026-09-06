@@ -5,23 +5,34 @@ import BottomNav from '../../components/dashboard/BottomNav'
 import { getWalletSummary, playSpin } from '../../lib/api/wallet'
 
 const tiers = [
-  { name: 'Starter', amount: 25000, icon: Zap, accent: 'from-[#6ee7b7] to-[#34d399]' },
-  { name: 'Bronze', amount: 50000, icon: Trophy, accent: 'from-[#fbbf7b] to-[#f97316]' },
-  { name: 'Silver', amount: 100000, icon: Gem, accent: 'from-[#c4b5fd] to-[#818cf8]' },
+  { name: 'Starter', amount: 5000, icon: Zap, accent: 'from-[#6ee7b7] to-[#34d399]' },
+  { name: 'Bronze', amount: 25000, icon: Trophy, accent: 'from-[#fbbf7b] to-[#f97316]' },
+  { name: 'Silver', amount: 50000, icon: Gem, accent: 'from-[#c4b5fd] to-[#818cf8]' },
 ]
 const wheelSegments = [
   { label: 'LOSE', colors: ['#7f1d3a', '#c45b70'] },
+  { label: 'WIN', colors: ['#567a15', '#b2e32f'] },
   { label: 'TRY AGAIN', colors: ['#8a5a10', '#d39a36'] },
   { label: 'LOSE', colors: ['#572268', '#9b4eaa'] },
+  { label: 'WIN', colors: ['#2b6e51', '#72d69b'] },
   { label: 'TRY AGAIN', colors: ['#11616a', '#3ea9a1'] },
-  { label: 'LOSE', colors: ['#245247', '#4c8d78'] },
-  { label: 'TRY AGAIN', colors: ['#3f4b8d', '#6d7ae5'] },
-  { label: 'LOSE', colors: ['#3a2d52', '#8664d6'] },
-  { label: 'TRY AGAIN', colors: ['#2a4c4a', '#4eb2a9'] },
 ]
 const wheelCenter = 200
 const wheelRadius = 184
 const segmentAngle = 360 / wheelSegments.length
+const outcomeSegments = {
+  lose: [0, 3],
+  win: [1, 4],
+  try_again: [2, 5],
+}
+
+function getOutcomeRotation(currentRotation, outcome) {
+  const segments = outcomeSegments[outcome] || outcomeSegments.try_again
+  const segmentIndex = segments[Math.floor(Math.random() * segments.length)]
+  const segmentCenter = segmentIndex * segmentAngle + segmentAngle / 2
+  const offset = (360 - segmentCenter - (currentRotation % 360) + 360) % 360
+  return currentRotation + 1440 + offset
+}
 
 function wheelPoint(angle, radius) {
   const radians = (angle - 90) * Math.PI / 180
@@ -48,22 +59,23 @@ export default function SpinPage() {
     getWalletSummary().then((wallet) => setBalance(wallet.balance)).catch((err) => setError(err.message))
   }, [])
 
-  const spin = () => {
+  const spin = async () => {
     if (spinning) return
     setResult('')
     setError('')
     setSpinning(true)
-    setRotation((current) => current + 1440 + Math.floor(Math.random() * 360))
-    playSpin(selectedTier.amount).then((spinResult) => {
+    try {
+      const spinResult = await playSpin(selectedTier.amount)
+      setRotation((current) => getOutcomeRotation(current, spinResult.outcome))
       window.setTimeout(() => {
         setSpinning(false)
         setResult(spinResult.message)
         setBalance(spinResult.balance)
       }, 2200)
-    }).catch((err) => {
+    } catch (err) {
       setSpinning(false)
       setError(err.message)
-    })
+    }
   }
 
   return <div className="min-h-screen bg-brand-base pb-[7.5rem] text-brand-text sm:pb-[8.5rem]"><div className="mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 lg:px-8"><header className="flex items-center gap-3 rounded-[1.5rem] border border-brand-border/70 bg-brand-panel/90 px-3 py-3"><button type="button" onClick={() => navigate('/home')} aria-label="Go back" className="flex h-11 w-11 items-center justify-center rounded-2xl border border-brand-border/70 hover:border-brand-lime"><ArrowLeft size={18} /></button><div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-lime text-brand-base"><Sparkles size={20} /></div><div className="flex-1"><p className="text-xs uppercase tracking-[0.28em] text-brand-muted">Play space</p><h1 className="text-lg font-semibold">SPIN ARENA</h1></div><span className="rounded-full border border-brand-lime/30 bg-brand-lime/10 px-3 py-1 text-xs font-semibold text-brand-lime">0%</span></header>

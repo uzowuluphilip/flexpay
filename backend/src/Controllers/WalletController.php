@@ -68,7 +68,7 @@ final class WalletController
         $userId = (int) $user['id'];
         $payload = $request->json();
         $stakeNaira = (int) ($payload['stake'] ?? 0);
-        $tiers = [25000, 50000, 100000];
+        $tiers = [5000, 25000, 50000];
 
         if (!in_array($stakeNaira, $tiers, true)) {
             Response::error('Please choose a supported spin stake.', 422, 'invalid_spin_stake');
@@ -81,7 +81,12 @@ final class WalletController
         }
 
         $roll = random_int(1, 100);
-        if ($roll <= 65) {
+        if ($roll <= 20) {
+            $outcome = 'win';
+            $transactionType = 'spin_win';
+            $resultKobo = $stakeKobo * 2;
+            $message = 'You landed on: Win — your stake was doubled.';
+        } elseif ($roll <= 50) {
             $outcome = 'lose';
             $transactionType = 'spin_loss';
             $resultKobo = -$stakeKobo;
