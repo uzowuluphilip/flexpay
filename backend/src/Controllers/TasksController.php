@@ -28,6 +28,7 @@ final class TasksController
     public function index(Request $request): void
     {
         $user = $this->requireUser($request);
+        $this->deactivateRetiredTasks();
         $rows = $this->db->query('SELECT * FROM tasks WHERE is_active = 1 ORDER BY id ASC')->fetchAll();
 
         if ($rows === []) {
@@ -192,24 +193,13 @@ final class TasksController
     {
         $seed = [
             ['Join Telegram Channel', 'Join the official FlexPay Telegram channel for announcements and rewards.', 5000],
-            ['Join Telegram Channel 2', 'Join the second FlexPay Telegram channel to stay connected with our community.', 5000],
             ['Complete Profile', 'Upload your profile photo and complete your FlexPay account profile.', 2000],
             ['Make First Referral', 'Invite your first friend to FlexPay and earn your referral bonus.', 10000],
             ['Daily Check-in', 'Login daily with FlexPay to earn your bonus check-in reward.', 1000],
-            ['Follow on Instagram', 'Follow FlexPay on Instagram to keep up with new offers and updates.', 3000],
-            ['Follow on X (Twitter)', 'Follow FlexPay on X to get the latest announcements and promotions.', 3000],
-            ['Like Facebook Page', 'Like the official FlexPay Facebook page for news and rewards.', 3000],
-            ['Follow on TikTok', 'Follow FlexPay on TikTok for fun videos and reward updates.', 3000],
             ['Share on Telegram', 'Share FlexPay with your Telegram contacts to grow the community.', 2000],
-            ['Share Instagram Story', 'Post about FlexPay on your Instagram story to invite friends.', 2000],
-            ['Watch YouTube Video', 'Watch and like the latest FlexPay video on YouTube.', 2500],
-            ['Subscribe on YouTube', 'Subscribe to the FlexPay YouTube channel for video updates.', 3000],
             ['Join Telegram Group', 'Join the FlexPay Telegram discussion group to meet other members.', 2000],
             ['Follow Telegram Bot', 'Follow the official FlexPay Telegram bot for updates and support.', 3000],
-            ['Repost on X', 'Repost the pinned FlexPay tweet on X to share our message.', 2000],
-            ['Comment on Facebook Post', 'Leave a positive comment on the latest FlexPay Facebook post.', 1500],
             ['Invite 3 Friends Today', 'Share your FlexPay referral link with at least three friends today.', 5000],
-            ['Rate Our App', 'Leave a five-star review for FlexPay to help more people discover us.', 2000],
             ['Join Telegram Community', 'Join the FlexPay Telegram community group for support and updates.', 2000],
             ['Follow on Threads', 'Follow FlexPay on Threads to stay up to date with announcements.', 2500],
         ];
@@ -221,5 +211,24 @@ final class TasksController
                  ON DUPLICATE KEY UPDATE title = VALUES(title)'
             )->execute([$title, $description, (int) $rewardKobo * 100,]);
         }
+    }
+
+    private function deactivateRetiredTasks(): void
+    {
+        $retiredTitles = [
+            'Join Telegram Channel 2',
+            'Follow on Instagram',
+            'Follow on X (Twitter)',
+            'Like Facebook Page',
+            'Follow on TikTok',
+            'Share Instagram Story',
+            'Watch YouTube Video',
+            'Subscribe on YouTube',
+            'Repost on X',
+            'Comment on Facebook Post',
+            'Rate Our App',
+        ];
+        $placeholders = implode(', ', array_fill(0, count($retiredTitles), '?'));
+        $this->db->prepare("UPDATE tasks SET is_active = 0 WHERE title IN ($placeholders) AND is_active = 1")->execute($retiredTitles);
     }
 }
