@@ -269,3 +269,25 @@ export async function submitUpgradeReceipt(amount, tier, file, token = null) {
   formData.append('receipt', file)
   return uploadRequest('/api/wallet/upgrade/submit-receipt', formData, token)
 }
+
+export async function getLoans(token = null) {
+  return apiRequest('/api/loans', { token })
+}
+
+export async function submitLoanRequest(payload, token = null) {
+  const formData = new FormData()
+  formData.append('amount', String(payload.amount))
+  formData.append('purpose', payload.purpose)
+  formData.append('employment_status', payload.employmentStatus)
+  formData.append('monthly_income_range', payload.monthlyIncomeRange)
+  formData.append('id_document', payload.idDocument)
+  formData.append('proof_of_address', payload.proofOfAddress)
+  return uploadRequest('/api/loans/request', formData, token)
+}
+
+export async function submitLoanRepayment(loanId, amount, file, token = null) {
+  const formData = new FormData()
+  formData.append('amount', String(amount))
+  formData.append('receipt', file)
+  return uploadRequest(`/api/loans/${loanId}/repay`, formData, token)
+}

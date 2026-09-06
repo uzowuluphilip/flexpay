@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import confetti from 'canvas-confetti'
-import { Bell, Eye, EyeOff, BadgeCheck, Wallet2, Plus, ArrowDownLeft, Sparkles, Gift, Trophy, Lock, ChevronRight, LoaderCircle, Send, CircleDollarSign, Flame, Check } from 'lucide-react'
+import { Bell, Eye, EyeOff, BadgeCheck, Wallet2, Plus, ArrowDownLeft, Sparkles, Gift, Trophy, Lock, ChevronRight, LoaderCircle, Send, CircleDollarSign, Flame, Check, HandCoins } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import BottomNav from '../../components/dashboard/BottomNav'
 import CurrencyDisplayToggle from '../../components/dashboard/CurrencyDisplayToggle'
@@ -437,6 +437,9 @@ function HomePage() {
               </button>
               <button onClick={() => navigate('/upgrade')} className="flex items-center gap-2 rounded-full border border-brand-border/70 bg-[rgba(11,7,20,0.54)] px-4 py-2.5 text-sm font-semibold text-brand-text">
                 <Sparkles size={16} /> Upgrade
+              </button>
+              <button onClick={() => navigate('/loan')} className="flex items-center gap-2 rounded-full border border-brand-border/70 bg-[rgba(11,7,20,0.54)] px-4 py-2.5 text-sm font-semibold text-brand-text">
+                <HandCoins size={16} /> Loan
               </button>
             </div>
           </section>

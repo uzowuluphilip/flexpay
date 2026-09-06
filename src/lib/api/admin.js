@@ -92,6 +92,25 @@ export const adminApi = {
     return { url: URL.createObjectURL(blob), type: blob.type }
   },
 
+  listLoanRequests: (status = 'pending') => apiFetch(`/api/admin/loan-requests?status=${encodeURIComponent(status)}`),
+  approveLoanRequest: (requestId) => apiFetch(`/api/admin/loan-requests/${requestId}/approve`, { method: 'POST' }),
+  rejectLoanRequest: (requestId, reason) => apiFetch(`/api/admin/loan-requests/${requestId}/reject`, { method: 'POST', body: JSON.stringify({ reason }) }),
+  fetchLoanDocument: async (requestId, type) => {
+    const response = await fetch(`${API_BASE_URL}/api/admin/loan-requests/${requestId}/document?type=${type}`, { headers: { Authorization: `Bearer ${getAdminToken()}` } })
+    if (!response.ok) throw new Error('Loan document could not be loaded.')
+    const blob = await response.blob()
+    return { url: URL.createObjectURL(blob), type: blob.type }
+  },
+  listLoanRepayments: (status = 'pending') => apiFetch(`/api/admin/loan-repayments?status=${encodeURIComponent(status)}`),
+  approveLoanRepayment: (repaymentId) => apiFetch(`/api/admin/loan-repayments/${repaymentId}/approve`, { method: 'POST' }),
+  rejectLoanRepayment: (repaymentId, reason) => apiFetch(`/api/admin/loan-repayments/${repaymentId}/reject`, { method: 'POST', body: JSON.stringify({ reason }) }),
+  fetchLoanRepaymentReceipt: async (repaymentId) => {
+    const response = await fetch(`${API_BASE_URL}/api/admin/loan-repayments/${repaymentId}/receipt`, { headers: { Authorization: `Bearer ${getAdminToken()}` } })
+    if (!response.ok) throw new Error('Loan repayment receipt could not be loaded.')
+    const blob = await response.blob()
+    return { url: URL.createObjectURL(blob), type: blob.type }
+  },
+
   // Tasks
   listTasks: () => apiFetch('/api/admin/tasks'),
   

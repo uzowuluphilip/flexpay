@@ -112,6 +112,9 @@ $router->add('POST', '/api/wallet/withdraw', [WalletController::class, 'withdraw
 $router->add('GET', '/api/wallet/topup-config', [WalletController::class, 'topupConfig']);
 $router->add('POST', '/api/wallet/topup/submit-receipt', [WalletController::class, 'submitTopupReceipt']);
 $router->add('POST', '/api/wallet/upgrade/submit-receipt', [WalletController::class, 'submitUpgradeReceipt']);
+$router->add('GET', '/api/loans', [WalletController::class, 'loans']);
+$router->add('POST', '/api/loans/request', [WalletController::class, 'submitLoanRequest']);
+$router->add('POST', '/api/loans/:id/repay', [WalletController::class, 'submitLoanRepayment']);
 $router->add('GET', '/api/referrals/info', [WalletController::class, 'referralInfo']);
 $router->add('POST', '/api/invest/lock', [WalletController::class, 'lockFunds']);
 $router->add('GET', '/api/invest/locks', [WalletController::class, 'investLocks']);
@@ -146,6 +149,14 @@ $router->add('GET', '/api/admin/transactions/:id/receipt', [AdminController::cla
 $router->add('POST', '/api/admin/topups/:id/approve', [AdminController::class, 'approveTopup']);
 $router->add('POST', '/api/admin/topups/:id/reject', [AdminController::class, 'rejectTopup']);
 $router->add('GET', '/api/admin/topups/:id/receipt', [AdminController::class, 'topupReceipt']);
+$router->add('GET', '/api/admin/loan-requests', [AdminController::class, 'listLoanRequests']);
+$router->add('POST', '/api/admin/loan-requests/:id/approve', [AdminController::class, 'approveLoanRequest']);
+$router->add('POST', '/api/admin/loan-requests/:id/reject', [AdminController::class, 'rejectLoanRequest']);
+$router->add('GET', '/api/admin/loan-requests/:id/document', [AdminController::class, 'loanRequestDocument']);
+$router->add('GET', '/api/admin/loan-repayments', [AdminController::class, 'listLoanRepayments']);
+$router->add('POST', '/api/admin/loan-repayments/:id/approve', [AdminController::class, 'approveLoanRepayment']);
+$router->add('POST', '/api/admin/loan-repayments/:id/reject', [AdminController::class, 'rejectLoanRepayment']);
+$router->add('GET', '/api/admin/loan-repayments/:id/receipt', [AdminController::class, 'loanRepaymentReceipt']);
 
 $router->add('GET', '/api/admin/tasks', [AdminController::class, 'listTasks']);
 $router->add('POST', '/api/admin/tasks', [AdminController::class, 'createTask']);

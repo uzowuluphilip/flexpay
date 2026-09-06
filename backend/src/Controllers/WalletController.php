@@ -638,6 +638,111 @@ final class WalletController
         ]);
     }
 
+    public function loans(Request $request): void
+    {
+        $user = $this->requireUser($request);
+        $userId = (int) $user['id'];
+        $requestStmt = $this->db->prepare('SELECT id, amount_kobo, fee_kobo, total_repayable_kobo, purpose, employment_status, monthly_income_range, status, rejection_reason, created_at FROM loan_requests WHERE user_id = ? ORDER BY id DESC');
+        $requestStmt->execute([$userId]);
+        $loanStmt = $this->db->prepare('SELECT id, loan_request_id, principal_kobo, fee_kobo, total_repayable_kobo, amount_repaid_kobo, status, disbursed_at FROM loans WHERE user_id = ? ORDER BY id DESC');
+        $loanStmt->execute([$userId]);
+
+        $formatLoan = static function (array $loan): array {
+            $total = (int) $loan['total_repayable_kobo'];
+            $repaid = (int) $loan['amount_repaid_kobo'];
+            return [
+                'id' => (int) $loan['id'],
+                'loanRequestId' => (int) $loan['loan_request_id'],
+                'principal' => (int) $loan['principal_kobo'] / 100,
+                'fee' => (int) $loan['fee_kobo'] / 100,
+                'totalRepayable' => $total / 100,
+                'amountRepaid' => $repaid / 100,
+                'remainingBalance' => max(0, $total - $repaid) / 100,
+                'status' => $loan['status'],
+                'disbursedAt' => $loan['disbursed_at'],
+            ];
+        };
+
+        Response::success([
+            'requests' => array_map(static fn (array $item): array => [
+                'id' => (int) $item['id'],
+                'amount' => (int) $item['amount_kobo'] / 100,
+                'fee' => (int) $item['fee_kobo'] / 100,
+                'totalRepayable' => (int) $item['total_repayable_kobo'] / 100,
+                'purpose' => $item['purpose'],
+                'employmentStatus' => $item['employment_status'],
+                'monthlyIncomeRange' => $item['monthly_income_range'],
+                'status' => $item['status'],
+                'rejectionReason' => $item['rejection_reason'],
+                'createdAt' => $item['created_at'],
+            ], $requestStmt->fetchAll()),
+            'loans' => array_map($formatLoan, $loanStmt->fetchAll()),
+        ]);
+    }
+
+    public function submitLoanRequest(Request $request): void
+    {
+        $user = $this->requireUser($request);
+        $amountNaira = (int) ($_POST['amount'] ?? 0);
+        $purpose = trim((string) ($_POST['purpose'] ?? ''));
+        $employmentStatus = trim((string) ($_POST['employment_status'] ?? ''));
+        $incomeRange = trim((string) ($_POST['monthly_income_range'] ?? ''));
+        $idDocument = $_FILES['id_document'] ?? null;
+        $proofOfAddress = $_FILES['proof_of_address'] ?? null;
+        $employmentOptions = ['employed', 'self-employed', 'student', 'unemployed'];
+        $incomeOptions = ['Below ₦50,000', '₦50,000 - ₦149,999', '₦150,000 - ₦299,999', '₦300,000+'];
+
+        if ($amountNaira < 1000 || $amountNaira > 500000) Response::error('Loan amount must be between ₦1,000 and ₦500,000.', 422, 'invalid_amount');
+        if ($purpose === '' || strlen($purpose) > 255) Response::error('Please provide a short loan purpose.', 422, 'invalid_purpose');
+        if (!in_array($employmentStatus, $employmentOptions, true) || !in_array($incomeRange, $incomeOptions, true)) Response::error('Please select valid employment and income details.', 422, 'invalid_profile');
+        $this->validateLoanDocument($idDocument, 'ID document');
+        $this->validateLoanDocument($proofOfAddress, 'Proof of address');
+
+        $existingStmt = $this->db->prepare('SELECT 1 FROM loan_requests WHERE user_id = ? AND status = "pending" UNION ALL SELECT 1 FROM loans WHERE user_id = ? AND status = "active" LIMIT 1');
+        $existingStmt->execute([(int) $user['id'], (int) $user['id']]);
+        if ($existingStmt->fetchColumn() !== false) Response::error('You already have a loan request or active loan under review.', 422, 'loan_exists');
+
+        $idPath = $this->storeLoanDocument($idDocument);
+        $addressPath = $this->storeLoanDocument($proofOfAddress);
+        $amountKobo = $amountNaira * 100;
+        $feeKobo = (int) round($amountKobo * 0.05);
+        try {
+            $this->db->prepare('INSERT INTO loan_requests (user_id, amount_kobo, fee_kobo, total_repayable_kobo, purpose, employment_status, monthly_income_range, id_document_path, proof_of_address_path, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, "pending", NOW())')->execute([(int) $user['id'], $amountKobo, $feeKobo, $amountKobo + $feeKobo, $purpose, $employmentStatus, $incomeRange, $idPath, $addressPath]);
+        } catch (\Throwable $throwable) {
+            @unlink(dirname(__DIR__, 2) . '/storage/loan-documents/' . $idPath);
+            @unlink(dirname(__DIR__, 2) . '/storage/loan-documents/' . $addressPath);
+            throw $throwable;
+        }
+
+        Response::success(['status' => 'pending', 'amount' => $amountNaira, 'fee' => $feeKobo / 100, 'totalRepayable' => ($amountKobo + $feeKobo) / 100], 201);
+    }
+
+    public function submitLoanRepayment(Request $request, array $params = []): void
+    {
+        $user = $this->requireUser($request);
+        $loanId = (int) ($params['id'] ?? 0);
+        $amountNaira = (int) ($_POST['amount'] ?? 0);
+        $file = $_FILES['receipt'] ?? null;
+        $stmt = $this->db->prepare('SELECT * FROM loans WHERE id = ? AND user_id = ? AND status = "active" LIMIT 1');
+        $stmt->execute([$loanId, (int) $user['id']]);
+        $loan = $stmt->fetch();
+        if ($loan === false) Response::error('Active loan not found.', 404);
+        $remainingStmt = $this->db->prepare('SELECT GREATEST(0, total_repayable_kobo - amount_repaid_kobo - COALESCE((SELECT SUM(amount_kobo) FROM loan_repayments WHERE loan_id = ? AND status = "pending"), 0)) FROM loans WHERE id = ?');
+        $remainingStmt->execute([$loanId, $loanId]);
+        $remainingKobo = (int) $remainingStmt->fetchColumn();
+        $amountKobo = $amountNaira * 100;
+        if ($amountKobo <= 0 || $amountKobo > $remainingKobo) Response::error('Repayment must be greater than zero and no more than the remaining balance.', 422, 'invalid_repayment');
+        $this->validateLoanDocument($file, 'Repayment receipt');
+        $filePath = $this->storeLoanDocument($file);
+        try {
+            $this->db->prepare('INSERT INTO loan_repayments (loan_id, user_id, amount_kobo, file_path, status, created_at) VALUES (?, ?, ?, ?, "pending", NOW())')->execute([$loanId, (int) $user['id'], $amountKobo, $filePath]);
+        } catch (\Throwable $throwable) {
+            @unlink(dirname(__DIR__, 2) . '/storage/loan-documents/' . $filePath);
+            throw $throwable;
+        }
+        Response::success(['status' => 'pending', 'amount' => $amountNaira, 'remainingBalance' => ($remainingKobo - $amountKobo) / 100], 201);
+    }
+
     public function submitTopupReceipt(Request $request): void
     {
         $user = $this->requireUser($request);
@@ -783,6 +888,25 @@ final class WalletController
         }
 
         Response::success(['reference' => $reference, 'status' => 'pending', 'tier' => $tier], 201);
+    }
+
+    private function validateLoanDocument(?array $file, string $label): void
+    {
+        if (!is_array($file) || (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) Response::error($label . ' is required.', 422, 'document_required');
+        if ((int) $file['size'] > 5 * 1024 * 1024) Response::error($label . ' must be 5MB or smaller.', 422, 'document_too_large');
+        $mime = (new \finfo(FILEINFO_MIME_TYPE))->file((string) $file['tmp_name']);
+        if (!in_array($mime, ['image/jpeg', 'image/png', 'application/pdf'], true)) Response::error($label . ' must be a JPG, PNG, or PDF file.', 422, 'invalid_document_type');
+    }
+
+    private function storeLoanDocument(array $file): string
+    {
+        $mime = (new \finfo(FILEINFO_MIME_TYPE))->file((string) $file['tmp_name']);
+        $extensions = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'application/pdf' => 'pdf'];
+        $directory = dirname(__DIR__, 2) . '/storage/loan-documents';
+        if (!is_dir($directory) && !mkdir($directory, 0700, true) && !is_dir($directory)) Response::error('Loan document storage is unavailable.', 500);
+        $fileName = bin2hex(random_bytes(24)) . '.' . $extensions[$mime];
+        if (!move_uploaded_file((string) $file['tmp_name'], $directory . '/' . $fileName)) Response::error('Loan document could not be saved.', 500);
+        return $fileName;
     }
 
     private function requireUser(Request $request): array

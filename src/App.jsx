@@ -38,6 +38,9 @@ import NotificationPrompt from './components/NotificationPrompt'
 import RequestStatusToast from './components/RequestStatusToast'
 import OnboardingPage from './pages/auth/OnboardingPage'
 import UpgradePage from './pages/dashboard/UpgradePage'
+import LoanPage from './pages/dashboard/LoanPage'
+import AdminLoanRequestsPage from './pages/admin/LoanRequestsPage'
+import AdminLoanRepaymentsPage from './pages/admin/LoanRepaymentsPage'
 
 function App() {
   useEffect(() => {
@@ -68,6 +71,7 @@ function App() {
               <Route path="/withdraw" element={<ProtectedRoute><WithdrawPage /></ProtectedRoute>} />
               <Route path="/top-up" element={<ProtectedRoute><TopUpPage /></ProtectedRoute>} />
               <Route path="/upgrade" element={<ProtectedRoute><UpgradePage /></ProtectedRoute>} />
+              <Route path="/loan" element={<ProtectedRoute><LoanPage /></ProtectedRoute>} />
               <Route path="/tasks" element={<ProtectedRoute><DailyTasksPage /></ProtectedRoute>} />
               <Route path="/daily-tasks" element={<ProtectedRoute><DailyTasksPage /></ProtectedRoute>} />
               <Route path="/spin" element={<ProtectedRoute><SpinPage /></ProtectedRoute>} />
@@ -83,6 +87,8 @@ function App() {
             <Route path="/admin/users" element={<AdminProtectedRoute><AdminUsersPage /></AdminProtectedRoute>} />
             <Route path="/admin/withdrawals" element={<AdminProtectedRoute><AdminWithdrawalsPage /></AdminProtectedRoute>} />
             <Route path="/admin/topups" element={<AdminProtectedRoute><AdminTopUpsPage /></AdminProtectedRoute>} />
+            <Route path="/admin/loan-requests" element={<AdminProtectedRoute><AdminLoanRequestsPage /></AdminProtectedRoute>} />
+            <Route path="/admin/loan-repayments" element={<AdminProtectedRoute><AdminLoanRepaymentsPage /></AdminProtectedRoute>} />
             <Route path="/admin/tasks" element={<AdminProtectedRoute><AdminTasksPage /></AdminProtectedRoute>} />
             <Route path="/admin/achievements" element={<AdminProtectedRoute><AdminAchievementsPage /></AdminProtectedRoute>} />
             <Route path="/admin/transactions" element={<AdminProtectedRoute><TransactionsPage /></AdminProtectedRoute>} />

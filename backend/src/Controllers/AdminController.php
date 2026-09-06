@@ -570,6 +570,150 @@ final class AdminController
         exit;
     }
 
+    public function listLoanRequests(Request $request): void
+    {
+        $this->requireAdmin($request);
+        $status = trim((string) ($request->query('status') ?? 'pending'));
+        $query = 'SELECT lr.*, u.full_name, u.email FROM loan_requests lr JOIN users u ON u.id = lr.user_id';
+        $params = [];
+        if ($status !== '') { $query .= ' WHERE lr.status = ?'; $params[] = $status; }
+        $query .= ' ORDER BY lr.created_at DESC LIMIT 100';
+        $stmt = $this->db->prepare($query);
+        $stmt->execute($params);
+        Response::success(['requests' => $stmt->fetchAll()]);
+    }
+
+    public function approveLoanRequest(Request $request, array $params = []): void
+    {
+        $admin = $this->requireAdmin($request);
+        $requestId = (int) ($params['id'] ?? 0);
+        $this->db->beginTransaction();
+        try {
+            $stmt = $this->db->prepare('SELECT * FROM loan_requests WHERE id = ? FOR UPDATE');
+            $stmt->execute([$requestId]);
+            $loanRequest = $stmt->fetch();
+            if ($loanRequest === false) { $this->db->rollBack(); Response::error('Loan request not found.', 404); }
+            if ($loanRequest['status'] !== 'pending') { $this->db->rollBack(); Response::error('Only pending loan requests can be approved.', 422); }
+            $existing = $this->db->prepare('SELECT id FROM loans WHERE loan_request_id = ? LIMIT 1');
+            $existing->execute([$requestId]);
+            if ($existing->fetchColumn() !== false) { $this->db->rollBack(); Response::error('This loan request has already been disbursed.', 422); }
+            $wallet = $this->getOrCreateWallet((int) $loanRequest['user_id']);
+            $this->db->prepare('UPDATE loan_requests SET status = "approved", reviewed_by_admin_id = ?, reviewed_at = NOW() WHERE id = ?')->execute([(int) $admin['id'], $requestId]);
+            $this->db->prepare('INSERT INTO loans (user_id, loan_request_id, principal_kobo, fee_kobo, total_repayable_kobo, amount_repaid_kobo, status, disbursed_at) VALUES (?, ?, ?, ?, ?, 0, "active", NOW())')->execute([(int) $loanRequest['user_id'], $requestId, (int) $loanRequest['amount_kobo'], (int) $loanRequest['fee_kobo'], (int) $loanRequest['total_repayable_kobo']]);
+            $loanId = (int) $this->db->lastInsertId();
+            $reference = 'loan_disbursement_' . $loanId . '_' . bin2hex(random_bytes(6));
+            $this->db->prepare('INSERT INTO transactions (user_id, wallet_id, type, amount_kobo, status, reference, meta, created_at, updated_at) VALUES (?, ?, "loan_disbursement", ?, "completed", ?, ?, NOW(), NOW())')->execute([(int) $loanRequest['user_id'], (int) $wallet['id'], (int) $loanRequest['amount_kobo'], $reference, json_encode(['loan_id' => $loanId, 'loan_request_id' => $requestId, 'principal_kobo' => (int) $loanRequest['amount_kobo'], 'fee_kobo' => (int) $loanRequest['fee_kobo']], JSON_THROW_ON_ERROR)]);
+            $this->db->prepare('INSERT INTO activity_feed (user_id, type, description, amount_kobo, created_at) VALUES (?, "loan", ?, ?, NOW())')->execute([(int) $loanRequest['user_id'], 'Loan approved and disbursed', (int) $loanRequest['amount_kobo']]);
+            $this->syncWalletBalance((int) $loanRequest['user_id']);
+            $this->logAudit((int) $admin['id'], 'loan.approve', 'loan_request', $requestId, ['loan_id' => $loanId, 'principal_kobo' => (int) $loanRequest['amount_kobo'], 'total_repayable_kobo' => (int) $loanRequest['total_repayable_kobo']]);
+            $this->db->commit();
+        } catch (\Throwable $throwable) {
+            if ($this->db->inTransaction()) $this->db->rollBack();
+            throw $throwable;
+        }
+        Response::success(['approved' => true, 'loanId' => $loanId, 'creditedPrincipalKobo' => (int) $loanRequest['amount_kobo']]);
+    }
+
+    public function rejectLoanRequest(Request $request, array $params = []): void
+    {
+        $admin = $this->requireAdmin($request);
+        $requestId = (int) ($params['id'] ?? 0);
+        $reason = trim((string) ($request->json()['reason'] ?? ''));
+        if ($reason === '') Response::error('Rejection reason is required.', 422);
+        $stmt = $this->db->prepare('UPDATE loan_requests SET status = "rejected", rejection_reason = ?, reviewed_by_admin_id = ?, reviewed_at = NOW() WHERE id = ? AND status = "pending"');
+        $stmt->execute([$reason, (int) $admin['id'], $requestId]);
+        if ($stmt->rowCount() === 0) Response::error('Pending loan request not found.', 404);
+        $this->logAudit((int) $admin['id'], 'loan.reject', 'loan_request', $requestId, ['reason' => $reason]);
+        Response::success(['rejected' => true]);
+    }
+
+    public function loanRequestDocument(Request $request, array $params = []): void
+    {
+        $this->requireAdmin($request);
+        $document = trim((string) ($request->query('type') ?? 'id')) === 'address' ? 'proof_of_address_path' : 'id_document_path';
+        $stmt = $this->db->prepare("SELECT {$document} AS file_path FROM loan_requests WHERE id = ? LIMIT 1");
+        $stmt->execute([(int) ($params['id'] ?? 0)]);
+        $row = $stmt->fetch();
+        if ($row === false) Response::error('Loan document not found.', 404);
+        $this->streamLoanDocument((string) $row['file_path']);
+    }
+
+    public function listLoanRepayments(Request $request): void
+    {
+        $this->requireAdmin($request);
+        $status = trim((string) ($request->query('status') ?? 'pending'));
+        $query = 'SELECT lr.*, l.principal_kobo, l.total_repayable_kobo, l.amount_repaid_kobo, l.status AS loan_status, u.full_name, u.email FROM loan_repayments lr JOIN loans l ON l.id = lr.loan_id JOIN users u ON u.id = lr.user_id';
+        $params = [];
+        if ($status !== '') { $query .= ' WHERE lr.status = ?'; $params[] = $status; }
+        $query .= ' ORDER BY lr.created_at DESC LIMIT 100';
+        $stmt = $this->db->prepare($query);
+        $stmt->execute($params);
+        Response::success(['repayments' => $stmt->fetchAll()]);
+    }
+
+    public function approveLoanRepayment(Request $request, array $params = []): void
+    {
+        $admin = $this->requireAdmin($request);
+        $repaymentId = (int) ($params['id'] ?? 0);
+        $this->db->beginTransaction();
+        try {
+            $stmt = $this->db->prepare('SELECT lr.*, l.total_repayable_kobo, l.amount_repaid_kobo, l.status AS loan_status FROM loan_repayments lr JOIN loans l ON l.id = lr.loan_id WHERE lr.id = ? FOR UPDATE');
+            $stmt->execute([$repaymentId]);
+            $repayment = $stmt->fetch();
+            if ($repayment === false) { $this->db->rollBack(); Response::error('Loan repayment not found.', 404); }
+            if ($repayment['status'] !== 'pending' || $repayment['loan_status'] !== 'active') { $this->db->rollBack(); Response::error('Only pending repayments for active loans can be approved.', 422); }
+            $newRepaid = (int) $repayment['amount_repaid_kobo'] + (int) $repayment['amount_kobo'];
+            if ($newRepaid > (int) $repayment['total_repayable_kobo']) { $this->db->rollBack(); Response::error('Repayment exceeds the remaining loan balance.', 422); }
+            $this->db->prepare('UPDATE loan_repayments SET status = "approved", reviewed_by_admin_id = ?, reviewed_at = NOW() WHERE id = ?')->execute([(int) $admin['id'], $repaymentId]);
+            $loanStatus = $newRepaid >= (int) $repayment['total_repayable_kobo'] ? 'repaid' : 'active';
+            $this->db->prepare('UPDATE loans SET amount_repaid_kobo = ?, status = ? WHERE id = ?')->execute([$newRepaid, $loanStatus, (int) $repayment['loan_id']]);
+            $wallet = $this->getOrCreateWallet((int) $repayment['user_id']);
+            $reference = 'loan_repayment_' . $repaymentId . '_' . bin2hex(random_bytes(6));
+            $this->db->prepare('INSERT INTO transactions (user_id, wallet_id, type, amount_kobo, status, reference, meta, created_at, updated_at) VALUES (?, ?, "loan_repayment", 0, "completed", ?, ?, NOW(), NOW())')->execute([(int) $repayment['user_id'], (int) $wallet['id'], $reference, json_encode(['loan_id' => (int) $repayment['loan_id'], 'repayment_id' => $repaymentId, 'amount_repaid_kobo' => (int) $repayment['amount_kobo'], 'wallet_impact_kobo' => 0], JSON_THROW_ON_ERROR)]);
+            $this->logAudit((int) $admin['id'], 'loan.repayment.approve', 'loan_repayment', $repaymentId, ['loan_id' => (int) $repayment['loan_id'], 'amount_repaid_kobo' => (int) $repayment['amount_kobo'], 'loan_status' => $loanStatus]);
+            $this->db->commit();
+        } catch (\Throwable $throwable) {
+            if ($this->db->inTransaction()) $this->db->rollBack();
+            throw $throwable;
+        }
+        Response::success(['approved' => true, 'loanStatus' => $loanStatus, 'amountRepaidKobo' => (int) $repayment['amount_kobo']]);
+    }
+
+    public function rejectLoanRepayment(Request $request, array $params = []): void
+    {
+        $admin = $this->requireAdmin($request);
+        $repaymentId = (int) ($params['id'] ?? 0);
+        $reason = trim((string) ($request->json()['reason'] ?? ''));
+        if ($reason === '') Response::error('Rejection reason is required.', 422);
+        $stmt = $this->db->prepare('UPDATE loan_repayments SET status = "rejected", rejection_reason = ?, reviewed_by_admin_id = ?, reviewed_at = NOW() WHERE id = ? AND status = "pending"');
+        $stmt->execute([$reason, (int) $admin['id'], $repaymentId]);
+        if ($stmt->rowCount() === 0) Response::error('Pending loan repayment not found.', 404);
+        $this->logAudit((int) $admin['id'], 'loan.repayment.reject', 'loan_repayment', $repaymentId, ['reason' => $reason]);
+        Response::success(['rejected' => true]);
+    }
+
+    public function loanRepaymentReceipt(Request $request, array $params = []): void
+    {
+        $this->requireAdmin($request);
+        $stmt = $this->db->prepare('SELECT file_path FROM loan_repayments WHERE id = ? LIMIT 1');
+        $stmt->execute([(int) ($params['id'] ?? 0)]);
+        $row = $stmt->fetch();
+        if ($row === false) Response::error('Loan repayment receipt not found.', 404);
+        $this->streamLoanDocument((string) $row['file_path']);
+    }
+
+    private function streamLoanDocument(string $fileName): void
+    {
+        $safeName = basename($fileName);
+        $path = dirname(__DIR__, 2) . '/storage/loan-documents/' . $safeName;
+        if (!is_file($path)) Response::error('Loan document file is unavailable.', 404);
+        $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($path) ?: 'application/octet-stream';
+        header('Content-Type: ' . $mime);
+        header('Content-Length: ' . filesize($path));
+        readfile($path);
+        exit;
+    }
+
     public function listTasks(Request $request): void
     {
         $admin = $this->requireAdmin($request);

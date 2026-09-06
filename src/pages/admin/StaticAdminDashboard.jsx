@@ -6,7 +6,7 @@ import './static-admin-dashboard.css'
 
 const navigation = [
   ['Dashboard', CircleDollarSign, '/admin', null], ['Users', Users, '/admin/users', 'totalUsers'], ['Banned', Ban, '/admin/users?status=banned', 'bannedUsers'],
-  ['Broadcast', Bell, '/admin', null], ['Withdraw', WalletCards, '/admin/withdrawals', null], ['Keys', KeyRound, '/admin', 52],
+  ['Broadcast', Bell, '/admin', null], ['Withdraw', WalletCards, '/admin/withdrawals', null], ['Loan Requests', WalletCards, '/admin/loan-requests', null], ['Loan Repayments', WalletCards, '/admin/loan-repayments', null], ['Keys', KeyRound, '/admin', 52],
   ['Master Key', KeyRound, '/admin', null], ['Balances', WalletCards, '/admin/users', null], ['Transactions', WalletCards, '/admin/transactions', null],
 ]
 

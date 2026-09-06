@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Users, ListChecks, History, CreditCard, User, MessageSquare, ShieldCheck, X } from 'lucide-react'
+import { Users, ListChecks, History, CreditCard, User, MessageSquare, ShieldCheck, HandCoins, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import '../../styles/wave-bounce.css'
 
@@ -9,6 +9,7 @@ const items = [
   { title: 'History', subtitle: 'Transaction history', to: '/history', icon: History },
   { title: 'Referrals', subtitle: 'Invite & earn', to: '/referrals', icon: Users },
   { title: 'Withdraw', subtitle: 'Cash out earnings', to: '/withdraw', icon: CreditCard },
+  { title: 'Loan', subtitle: 'Request or repay', to: '/loan', icon: HandCoins },
   { title: 'Profile', subtitle: 'Account settings', to: '/profile', icon: User },
   { title: 'Community', subtitle: 'Join the network', to: '/community', icon: Users },
   { title: 'Support', subtitle: 'Get help fast', to: '/support', icon: MessageSquare },
