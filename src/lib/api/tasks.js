@@ -102,13 +102,6 @@ export const tasks = [
     rewardAmount: 2000,
     url: 'https://t.me/flexpaycommunity',
   },
-  {
-    id: 'follow-on-threads',
-    title: 'Follow on Threads',
-    description: 'Follow FlexPay on Threads to stay up to date with announcements.',
-    rewardAmount: 2500,
-    url: 'https://threads.net/@flexpay',
-  },
 ]
 
 export async function getTasks() {

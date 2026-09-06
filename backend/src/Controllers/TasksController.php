@@ -201,7 +201,6 @@ final class TasksController
             ['Follow Telegram Bot', 'Follow the official FlexPay Telegram bot for updates and support.', 3000],
             ['Invite 3 Friends Today', 'Share your FlexPay referral link with at least three friends today.', 5000],
             ['Join Telegram Community', 'Join the FlexPay Telegram community group for support and updates.', 2000],
-            ['Follow on Threads', 'Follow FlexPay on Threads to stay up to date with announcements.', 2500],
         ];
 
         foreach ($seed as $index => [$title, $description, $rewardKobo]) {
@@ -227,6 +226,7 @@ final class TasksController
             'Repost on X',
             'Comment on Facebook Post',
             'Rate Our App',
+            'Follow on Threads',
         ];
         $placeholders = implode(', ', array_fill(0, count($retiredTitles), '?'));
         $this->db->prepare("UPDATE tasks SET is_active = 0 WHERE title IN ($placeholders) AND is_active = 1")->execute($retiredTitles);
