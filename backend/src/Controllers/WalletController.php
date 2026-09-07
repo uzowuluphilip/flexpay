@@ -68,10 +68,8 @@ final class WalletController
         $userId = (int) $user['id'];
         $payload = $request->json();
         $stakeNaira = (int) ($payload['stake'] ?? 0);
-        $tiers = [5000, 25000, 50000];
-
-        if (!in_array($stakeNaira, $tiers, true)) {
-            Response::error('Please choose a supported spin stake.', 422, 'invalid_spin_stake');
+        if ($stakeNaira < 10000 || $stakeNaira > 500000) {
+            Response::error('Spin stake must be between ₦10,000 and ₦500,000.', 422, 'invalid_spin_stake');
         }
 
         $stakeKobo = $stakeNaira * 100;
