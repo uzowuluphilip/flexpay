@@ -102,3 +102,33 @@ select option {
     transform: translateY(0);
   }
 }
+
+@keyframes spin-win-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  18% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  28% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  82% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.02) translateY(-6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-\[spin-win-pop_2\.4s_cubic-bezier\(\.2\,1\.4\,\.4\,1\)_forwards\] {
+    animation: none;
+    opacity: 1;
+  }
+}

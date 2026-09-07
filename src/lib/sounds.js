@@ -78,6 +78,12 @@ export function playSound(type = 'tap') {
       { frequency: 700, duration: 0.09, type: 'triangle', volume: 0.17 },
       { frequency: 980, duration: 0.16, type: 'sine', volume: 0.18 },
     ],
+    spin: [
+      { frequency: 220, duration: 0.08, type: 'triangle', volume: 0.12 },
+      { frequency: 300, duration: 0.08, type: 'triangle', volume: 0.13 },
+      { frequency: 390, duration: 0.08, type: 'triangle', volume: 0.14 },
+      { frequency: 500, duration: 0.1, type: 'sine', volume: 0.15 },
+    ],
     error: [{ frequency: 180, duration: 0.14, type: 'sawtooth', volume: 0.14 }],
     warning: [{ frequency: 260, duration: 0.12, type: 'square', volume: 0.12 }],
   }
