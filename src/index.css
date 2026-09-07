@@ -42,6 +42,25 @@ body {
   box-sizing: border-box;
 }
 
+input:not([type='file']),
+select,
+textarea {
+  background-color: var(--fp-bg-panel);
+  color: var(--fp-text-primary);
+  caret-color: var(--fp-lime);
+}
+
+input:not([type='file'])::placeholder,
+textarea::placeholder {
+  color: var(--fp-text-muted);
+  opacity: 1;
+}
+
+select option {
+  background-color: var(--fp-bg-panel);
+  color: var(--fp-text-primary);
+}
+
 #root {
   min-height: 100vh;
   overflow-x: hidden;
