@@ -1,5 +1,5 @@
 const SOUND_KEY = 'flexpay-sounds-enabled'
-const audioState = { context: null }
+const audioState = { context: null, spinTimer: null }
 
 function ensureAudioContext() {
   if (typeof window === 'undefined') return null
@@ -104,6 +104,37 @@ export function playSound(type = 'tap') {
   })
 
   return true
+}
+
+export function startSpinSound() {
+  if (!getSoundsEnabled() || typeof window === 'undefined') return false
+
+  stopSpinSound()
+  const audioContext = ensureAudioContext()
+  if (!audioContext) return false
+
+  let tick = 0
+  const playTick = () => {
+    if (!getSoundsEnabled()) return
+    playTone({
+      frequency: 260 + (tick % 4) * 42,
+      duration: 0.055,
+      type: 'square',
+      volume: 0.08,
+    })
+    tick += 1
+  }
+
+  playTick()
+  audioState.spinTimer = window.setInterval(playTick, 135)
+  return true
+}
+
+export function stopSpinSound() {
+  if (typeof window !== 'undefined' && audioState.spinTimer !== null) {
+    window.clearInterval(audioState.spinTimer)
+  }
+  audioState.spinTimer = null
 }
 
 export function installGlobalSoundCues() {

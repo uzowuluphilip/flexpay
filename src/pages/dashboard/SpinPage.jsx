@@ -14,7 +14,11 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "../../components/dashboard/BottomNav";
 import { getWalletSummary, playSpin } from "../../lib/api/wallet";
-import { playSound } from "../../lib/sounds";
+import {
+  playSound,
+  startSpinSound,
+  stopSpinSound,
+} from "../../lib/sounds";
 
 const tiers = [
   {
@@ -199,6 +203,8 @@ export default function SpinPage() {
     getWalletSummary()
       .then((wallet) => setBalance(wallet.balance))
       .catch((err) => setError(err.message));
+
+    return () => stopSpinSound();
   }, []);
 
   const spin = async () => {
@@ -212,11 +218,12 @@ export default function SpinPage() {
       return;
     }
     setSpinning(true);
-    playSound("spin");
+    startSpinSound();
     try {
       const spinResult = await playSpin(stake);
       setRotation((current) => getOutcomeRotation(current, spinResult.outcome));
       window.setTimeout(() => {
+        stopSpinSound();
         setSpinning(false);
         setResult(spinResult.message);
         setBalance(spinResult.balance);
@@ -226,6 +233,7 @@ export default function SpinPage() {
         }
       }, 2200);
     } catch (err) {
+      stopSpinSound();
       setSpinning(false);
       setError(err.message);
     }
