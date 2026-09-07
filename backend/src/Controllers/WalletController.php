@@ -640,6 +640,8 @@ final class WalletController
     {
         $user = $this->requireUser($request);
         $userId = (int) $user['id'];
+        $unlockCheckStmt = $this->db->prepare('SELECT 1 FROM transactions WHERE user_id = ? AND type = "loan_unlock_fee" AND status = "completed" LIMIT 1');
+        $unlockCheckStmt->execute([$userId]);
         $requestStmt = $this->db->prepare('SELECT id, amount_kobo, fee_kobo, total_repayable_kobo, purpose, employment_status, monthly_income_range, status, rejection_reason, created_at FROM loan_requests WHERE user_id = ? ORDER BY id DESC');
         $requestStmt->execute([$userId]);
         $loanStmt = $this->db->prepare('SELECT id, loan_request_id, principal_kobo, fee_kobo, total_repayable_kobo, amount_repaid_kobo, status, disbursed_at FROM loans WHERE user_id = ? ORDER BY id DESC');
@@ -662,6 +664,7 @@ final class WalletController
         };
 
         Response::success([
+            'loanAccessUnlocked' => $unlockCheckStmt->fetchColumn() !== false,
             'requests' => array_map(static fn (array $item): array => [
                 'id' => (int) $item['id'],
                 'amount' => (int) $item['amount_kobo'] / 100,
@@ -713,6 +716,81 @@ final class WalletController
         }
 
         Response::success(['status' => 'pending', 'amount' => $amountNaira, 'fee' => $feeKobo / 100, 'totalRepayable' => ($amountKobo + $feeKobo) / 100], 201);
+    }
+
+    public function submitLoanUnlockReceipt(Request $request): void
+    {
+        $user = $this->requireUser($request);
+        $amountNaira = (int) round((float) ($_POST['amount'] ?? 7700));
+        $file = $_FILES['receipt'] ?? null;
+
+        if ($amountNaira !== 7700) {
+            Response::error('The loan unlock fee is ₦7,700.', 422, 'invalid_loan_unlock_amount');
+        }
+        if (!is_array($file) || (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            Response::error('A payment proof file is required.', 422, 'receipt_required');
+        }
+        if ((int) $file['size'] > 5 * 1024 * 1024) {
+            Response::error('Payment proof must be 5MB or smaller.', 422, 'receipt_too_large');
+        }
+
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $mime = $finfo->file((string) $file['tmp_name']);
+        $allowed = [
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'application/pdf' => 'pdf',
+        ];
+        if (!isset($allowed[$mime])) {
+            Response::error('Payment proof must be a JPG, PNG, or PDF file.', 422, 'invalid_receipt_type');
+        }
+
+        $receiptData = file_get_contents((string) $file['tmp_name']);
+        if ($receiptData === false) {
+            Response::error('Payment proof could not be read.', 422, 'receipt_unreadable');
+        }
+
+        $storageDir = dirname(__DIR__, 2) . '/storage/topup-receipts';
+        if (!is_dir($storageDir) && !mkdir($storageDir, 0700, true) && !is_dir($storageDir)) {
+            Response::error('Receipt storage is unavailable.', 500);
+        }
+
+        $fileName = bin2hex(random_bytes(24)) . '.' . $allowed[$mime];
+        $filePath = $storageDir . '/' . $fileName;
+        if (!move_uploaded_file((string) $file['tmp_name'], $filePath)) {
+            Response::error('Payment proof upload could not be saved.', 500);
+        }
+
+        $userId = (int) $user['id'];
+        $wallet = $this->getWalletRow($userId);
+        $amountKobo = $amountNaira * 100;
+        $reference = 'loan_unlock_' . $userId . '_' . time() . '_' . bin2hex(random_bytes(4));
+
+        $this->db->beginTransaction();
+        try {
+            $this->db->prepare(
+                'INSERT INTO transactions (user_id, wallet_id, type, amount_kobo, status, reference, meta, created_at, updated_at)
+                 VALUES (?, ?, "loan_unlock_fee", ?, "pending", ?, ?, NOW(), NOW())'
+            )->execute([$userId, (int) $wallet['id'], $amountKobo, $reference, json_encode([
+                'claimed_amount_kobo' => $amountKobo,
+            ], JSON_THROW_ON_ERROR)]);
+            $transactionId = (int) $this->db->lastInsertId();
+            $this->db->prepare(
+                'INSERT INTO topup_receipts (user_id, transaction_id, file_path, receipt_data, receipt_mime, status, created_at)
+                 VALUES (?, ?, ?, ?, ?, "pending", NOW())'
+            )->execute([$userId, $transactionId, $fileName, $receiptData, $mime]);
+            $this->db->commit();
+        } catch (\Throwable $throwable) {
+            $this->db->rollBack();
+            @unlink($filePath);
+            throw $throwable;
+        }
+
+        Response::success([
+            'reference' => $reference,
+            'status' => 'pending',
+            'unlockAmount' => $amountNaira,
+        ], 201);
     }
 
     public function submitLoanRepayment(Request $request, array $params = []): void

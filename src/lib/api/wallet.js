@@ -262,6 +262,13 @@ export async function submitTopupReceipt(amount, file, token = null) {
   return uploadRequest('/api/wallet/topup/submit-receipt', formData, token)
 }
 
+export async function submitLoanUnlockReceipt(file, token = null) {
+  const formData = new FormData()
+  formData.append('amount', '7700')
+  formData.append('receipt', file)
+  return uploadRequest('/api/wallet/loan-unlock/submit-receipt', formData, token)
+}
+
 export async function submitUpgradeReceipt(amount, tier, file, token = null) {
   const formData = new FormData()
   formData.append('amount', String(amount))

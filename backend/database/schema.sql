@@ -131,7 +131,7 @@ CREATE TABLE transactions (
   user_id       BIGINT UNSIGNED NOT NULL,
   wallet_id     BIGINT UNSIGNED NOT NULL,
   type          ENUM('top_up','welcome_bonus','withdrawal','referral_bonus','check_in_bonus',
-                      'task_reward','spin_win','spin_loss','spin_try','loan_disbursement','loan_repayment','upgrade_fee','admin_adjustment',
+                      'task_reward','spin_win','spin_loss','spin_try','loan_disbursement','loan_repayment','upgrade_fee','loan_unlock_fee','admin_adjustment',
                       'lock_hold','lock_release') NOT NULL,
   amount_kobo   BIGINT          NOT NULL COMMENT 'positive = credit, negative = debit',
   status        ENUM('pending','completed','failed','reversed') NOT NULL DEFAULT 'completed',

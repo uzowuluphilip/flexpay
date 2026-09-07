@@ -71,13 +71,13 @@ export default function StaticAdminDashboard() {
 
 function PendingTransactionCard({ transaction }) {
   const meta = JSON.parse(transaction.meta || '{}')
-  const typeLabels = { top_up: 'Top-up', withdrawal: 'Withdrawal', upgrade_fee: 'Upgrade', lock_hold: 'Investment' }
+  const typeLabels = { top_up: 'Top-up', withdrawal: 'Withdrawal', upgrade_fee: 'Upgrade', loan_unlock_fee: 'Loan unlock fee', lock_hold: 'Investment' }
   const amountKobo = transaction.type === 'top_up' ? Number(meta.claimed_amount_kobo || transaction.amount_kobo) : Number(transaction.amount_kobo)
   const detail = transaction.bank_name
     ? `${transaction.bank_name} · ${transaction.account_number} · ${transaction.account_name}`
     : transaction.type === 'upgrade_fee'
       ? `${meta.tier || 'Upgrade'} payment`
-      : transaction.type === 'lock_hold' ? `${(Math.abs(amountKobo) / 100).toLocaleString('en-NG')} locked for 30 days` : 'Receipt attached'
+      : transaction.type === 'loan_unlock_fee' ? '₦7,700 loan feature activation' : transaction.type === 'lock_hold' ? `${(Math.abs(amountKobo) / 100).toLocaleString('en-NG')} locked for 30 days` : 'Receipt attached'
 
   return <article className="static-admin-pending">
     <div className="static-admin-pending-top"><div><h2>{transaction.full_name}</h2><p>{transaction.email}</p><span>{typeLabels[transaction.type] || transaction.type} · Pending</span></div><b>Pending</b></div>

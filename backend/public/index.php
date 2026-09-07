@@ -94,6 +94,11 @@ if (!in_array('receipt_mime', $receiptColumns, true)) {
     $database->exec('ALTER TABLE topup_receipts ADD COLUMN receipt_mime VARCHAR(100) NULL AFTER receipt_data');
 }
 
+$transactionType = $database->query("SHOW COLUMNS FROM transactions LIKE 'type'")->fetch(PDO::FETCH_ASSOC);
+if ($transactionType !== false && strpos((string) ($transactionType['Type'] ?? ''), "'loan_unlock_fee'") === false) {
+    $database->exec("ALTER TABLE transactions MODIFY type ENUM('top_up','welcome_bonus','withdrawal','referral_bonus','check_in_bonus','task_reward','spin_win','spin_loss','spin_try','loan_disbursement','loan_repayment','upgrade_fee','loan_unlock_fee','admin_adjustment','lock_hold','lock_release') NOT NULL");
+}
+
 $router = new Router();
 $router->add('POST', '/api/auth/register', [AuthController::class, 'register']);
 $router->add('POST', '/api/auth/login', [AuthController::class, 'login']);
@@ -111,6 +116,7 @@ $router->add('GET', '/api/wallet/activity', [WalletController::class, 'activity'
 $router->add('POST', '/api/wallet/withdraw', [WalletController::class, 'withdraw']);
 $router->add('GET', '/api/wallet/topup-config', [WalletController::class, 'topupConfig']);
 $router->add('POST', '/api/wallet/topup/submit-receipt', [WalletController::class, 'submitTopupReceipt']);
+$router->add('POST', '/api/wallet/loan-unlock/submit-receipt', [WalletController::class, 'submitLoanUnlockReceipt']);
 $router->add('POST', '/api/wallet/upgrade/submit-receipt', [WalletController::class, 'submitUpgradeReceipt']);
 $router->add('GET', '/api/loans', [WalletController::class, 'loans']);
 $router->add('POST', '/api/loans/request', [WalletController::class, 'submitLoanRequest']);

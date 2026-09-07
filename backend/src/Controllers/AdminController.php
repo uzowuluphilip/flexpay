@@ -385,6 +385,9 @@ final class AdminController
                 $feeKobo = (int) round($claimedKobo * 0.02);
                 $this->db->prepare('UPDATE transactions SET amount_kobo = ?, status = "completed", meta = JSON_SET(COALESCE(meta, JSON_OBJECT()), "$.fee_kobo", ?, "$.credited_amount_kobo", ?), updated_at = NOW() WHERE id = ?')->execute([$claimedKobo - $feeKobo, $feeKobo, $claimedKobo - $feeKobo, $transactionId]);
                 $this->db->prepare('UPDATE topup_receipts SET status = "approved", reviewed_by_admin_id = ?, reviewed_at = NOW() WHERE transaction_id = ? AND status = "pending"')->execute([(int) $admin['id'], $transactionId]);
+            } elseif ($transaction['type'] === 'loan_unlock_fee') {
+                $this->db->prepare('UPDATE transactions SET status = "completed", meta = JSON_SET(COALESCE(meta, JSON_OBJECT()), "$.approved_by_admin_id", ?), updated_at = NOW() WHERE id = ?')->execute([(int) $admin['id'], $transactionId]);
+                $this->db->prepare('UPDATE topup_receipts SET status = "approved", reviewed_by_admin_id = ?, reviewed_at = NOW() WHERE transaction_id = ? AND status = "pending"')->execute([(int) $admin['id'], $transactionId]);
             } elseif ($transaction['type'] === 'withdrawal') {
                 $balanceStmt = $this->db->prepare('SELECT COALESCE(SUM(amount_kobo), 0) FROM transactions WHERE user_id = ? AND status = "completed"');
                 $balanceStmt->execute([(int) $transaction['user_id']]);
@@ -402,7 +405,7 @@ final class AdminController
                 }
             }
 
-            if ($transaction['type'] !== 'top_up') {
+            if (!in_array($transaction['type'], ['top_up', 'loan_unlock_fee'], true)) {
                 $this->db->prepare('UPDATE transactions SET status = "completed", updated_at = NOW() WHERE id = ?')->execute([$transactionId]);
             }
             if ($transaction['type'] === 'upgrade_fee') {

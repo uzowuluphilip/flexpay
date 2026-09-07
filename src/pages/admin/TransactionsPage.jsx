@@ -3,7 +3,7 @@ import { ArrowLeft, Check, Eye, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { adminApi } from '../../lib/api/admin'
 
-const labels = { top_up: 'Top-up', withdrawal: 'Withdrawal', upgrade_fee: 'Upgrade', lock_hold: 'Investment' }
+const labels = { top_up: 'Top-up', withdrawal: 'Withdrawal', upgrade_fee: 'Upgrade', loan_unlock_fee: 'Loan unlock fee', lock_hold: 'Investment' }
 
 export default function TransactionsPage() {
   const navigate = useNavigate()
