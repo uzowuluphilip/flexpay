@@ -1,4 +1,22 @@
 const SOUND_KEY = 'flexpay-sounds-enabled'
+const audioState = { context: null }
+
+function ensureAudioContext() {
+  if (typeof window === 'undefined') return null
+
+  const AudioContext = window.AudioContext || window.webkitAudioContext
+  if (!AudioContext) return null
+
+  if (!audioState.context) {
+    audioState.context = new AudioContext()
+  }
+
+  if (audioState.context.state === 'suspended') {
+    audioState.context.resume().catch(() => {})
+  }
+
+  return audioState.context
+}
 
 export function getSoundsEnabled() {
   if (typeof window === 'undefined') return true
@@ -20,24 +38,23 @@ export function setSoundsEnabled(nextValue) {
 function playTone({ frequency = 440, duration = 0.12, type = 'sine', volume = 0.04 }) {
   if (!getSoundsEnabled() || typeof window === 'undefined') return false
 
-  const AudioContext = window.AudioContext || window.webkitAudioContext
-  if (!AudioContext) return false
+  const audioContext = ensureAudioContext()
+  if (!audioContext) return false
 
-  const audioContext = new AudioContext()
   const oscillator = audioContext.createOscillator()
   const gain = audioContext.createGain()
+  const start = audioContext.currentTime
 
   oscillator.type = type
   oscillator.frequency.value = frequency
-  gain.gain.setValueAtTime(0.0001, audioContext.currentTime)
-  gain.gain.exponentialRampToValueAtTime(volume, audioContext.currentTime + 0.01)
-  gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + duration)
+  gain.gain.setValueAtTime(0.0001, start)
+  gain.gain.exponentialRampToValueAtTime(volume, start + 0.01)
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + duration)
 
   oscillator.connect(gain)
   gain.connect(audioContext.destination)
-  oscillator.start()
-  oscillator.stop(audioContext.currentTime + duration)
-  oscillator.addEventListener('ended', () => audioContext.close(), { once: true })
+  oscillator.start(start)
+  oscillator.stop(start + duration)
 
   return true
 }
@@ -83,7 +100,12 @@ export function installGlobalSoundCues() {
   if (document.documentElement.dataset.flexpaySoundInstalled === 'true') return
   document.documentElement.dataset.flexpaySoundInstalled = 'true'
 
+  const unlockAudio = () => {
+    ensureAudioContext()
+  }
+
   const triggerFromEvent = (event) => {
+    unlockAudio()
     if (!getSoundsEnabled() || event.defaultPrevented) return
 
     const target = event.target
@@ -96,8 +118,10 @@ export function installGlobalSoundCues() {
     playSound(customType)
   }
 
+  document.addEventListener('pointerdown', unlockAudio, { once: true })
   document.addEventListener('click', triggerFromEvent, true)
   document.addEventListener('keydown', (event) => {
+    unlockAudio()
     if (!['Enter', ' ', 'Spacebar'].includes(event.key)) return
     if (!getSoundsEnabled()) return
 
