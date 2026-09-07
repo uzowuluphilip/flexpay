@@ -35,7 +35,7 @@ export function setSoundsEnabled(nextValue) {
   return enabled
 }
 
-function playTone({ frequency = 440, duration = 0.12, type = 'sine', volume = 0.04 }) {
+function playTone({ frequency = 440, duration = 0.12, type = 'sine', volume = 0.18 }) {
   if (!getSoundsEnabled() || typeof window === 'undefined') return false
 
   const audioContext = ensureAudioContext()
@@ -48,7 +48,7 @@ function playTone({ frequency = 440, duration = 0.12, type = 'sine', volume = 0.
   oscillator.type = type
   oscillator.frequency.value = frequency
   gain.gain.setValueAtTime(0.0001, start)
-  gain.gain.exponentialRampToValueAtTime(volume, start + 0.01)
+  gain.gain.exponentialRampToValueAtTime(volume, start + 0.02)
   gain.gain.exponentialRampToValueAtTime(0.0001, start + duration)
 
   oscillator.connect(gain)
@@ -63,30 +63,36 @@ export function playSound(type = 'tap') {
   if (!getSoundsEnabled() || typeof window === 'undefined') return false
 
   const patterns = {
-    tap: [{ frequency: 440, duration: 0.06, type: 'sine', volume: 0.028 }],
+    tap: [{ frequency: 440, duration: 0.08, type: 'sine', volume: 0.15 }],
     toggle: [
-      { frequency: 300, duration: 0.05, type: 'triangle', volume: 0.025 },
-      { frequency: 540, duration: 0.08, type: 'triangle', volume: 0.03 },
+      { frequency: 300, duration: 0.06, type: 'triangle', volume: 0.12 },
+      { frequency: 540, duration: 0.09, type: 'triangle', volume: 0.14 },
     ],
     success: [
-      { frequency: 420, duration: 0.07, type: 'sine', volume: 0.03 },
-      { frequency: 620, duration: 0.09, type: 'sine', volume: 0.036 },
-      { frequency: 820, duration: 0.12, type: 'triangle', volume: 0.04 },
+      { frequency: 420, duration: 0.08, type: 'sine', volume: 0.15 },
+      { frequency: 620, duration: 0.1, type: 'sine', volume: 0.17 },
+      { frequency: 820, duration: 0.14, type: 'triangle', volume: 0.18 },
     ],
     reward: [
-      { frequency: 540, duration: 0.08, type: 'triangle', volume: 0.032 },
-      { frequency: 700, duration: 0.08, type: 'triangle', volume: 0.036 },
-      { frequency: 980, duration: 0.14, type: 'sine', volume: 0.04 },
+      { frequency: 540, duration: 0.09, type: 'triangle', volume: 0.16 },
+      { frequency: 700, duration: 0.09, type: 'triangle', volume: 0.17 },
+      { frequency: 980, duration: 0.16, type: 'sine', volume: 0.18 },
     ],
-    error: [{ frequency: 180, duration: 0.12, type: 'sawtooth', volume: 0.03 }],
-    warning: [{ frequency: 260, duration: 0.1, type: 'square', volume: 0.025 }],
+    error: [{ frequency: 180, duration: 0.14, type: 'sawtooth', volume: 0.14 }],
+    warning: [{ frequency: 260, duration: 0.12, type: 'square', volume: 0.12 }],
   }
 
   const chosen = patterns[type] || patterns.tap
 
+  const audioContext = ensureAudioContext()
+  if (!audioContext) return false
+
   chosen.forEach((tone, index) => {
     const delayMs = index * 55
     window.setTimeout(() => {
+      if (audioContext.state === 'suspended') {
+        audioContext.resume().catch(() => {})
+      }
       playTone(tone)
     }, delayMs)
   })
