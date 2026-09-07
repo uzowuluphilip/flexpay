@@ -11,6 +11,7 @@ import { getNotificationInbox } from '../../lib/api/notifications'
 import { tasks as taskDefinitions } from '../../lib/api/tasks'
 import { claimDailyReward, checkIn, getAchievements, getExchangeRate, getRecentActivity, getCheckInStatus, getReferralInfo, getWalletSummary } from '../../lib/api/wallet'
 import { formatDisplayAmount, getStoredDisplayCurrency } from '../../lib/currency'
+import { playSound } from '../../lib/sounds'
 
 const notificationHistoryKey = 'flexpay-notification-history'
 const completedTasksKey = 'flexpay-completed-tasks'
@@ -303,6 +304,7 @@ function HomePage() {
 
       if (updated.checkedInToday) {
         triggerConfetti()
+        playSound('reward')
         // Refetch wallet balance after successful check-in
         const walletData = await getWalletSummary()
         setWallet({
@@ -312,6 +314,9 @@ function HomePage() {
           verified: walletData.verified,
         })
       }
+    } catch (error) {
+      playSound('error')
+      throw error
     } finally {
       setCheckingIn(false)
     }
@@ -325,6 +330,7 @@ function HomePage() {
         claimsToday: updated.claimsToday,
         claimsRemaining: updated.claimsRemaining,
       })
+      playSound('success')
       // Refetch wallet balance after successful claim
       const walletData = await getWalletSummary()
       setWallet({
@@ -333,6 +339,9 @@ function HomePage() {
         perReferral: walletData.perReferral,
         verified: walletData.verified,
       })
+    } catch (error) {
+      playSound('error')
+      throw error
     } finally {
       setClaiming(false)
     }

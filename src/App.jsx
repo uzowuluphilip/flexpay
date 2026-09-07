@@ -19,6 +19,7 @@ import ProtectedRoute from './components/dashboard/ProtectedRoute'
 import RouteTransitionLayout from './components/RouteTransitionLayout'
 import { AuthProvider } from './lib/authContext'
 import { AdminAuthProvider } from './lib/AdminAuthContext'
+import { installGlobalSoundCues } from './lib/sounds'
 import { AdminProtectedRoute } from './components/admin/AdminProtectedRoute'
 import AdminLoginPage from './pages/admin/LoginPage'
 import StaticAdminDashboard from './pages/admin/StaticAdminDashboard'
@@ -46,6 +47,7 @@ function App() {
   useEffect(() => {
     const themeEnabled = window.localStorage.getItem('flexpay-theme-enabled') !== 'false'
     document.documentElement.dataset.theme = themeEnabled ? 'dark' : 'light'
+    installGlobalSoundCues()
   }, [])
 
   return (

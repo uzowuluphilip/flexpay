@@ -5,32 +5,13 @@ import BottomNav from '../../components/dashboard/BottomNav'
 import { useAuth } from '../../hooks/useAuth'
 import { logoutSession } from '../../lib/api/auth'
 import { getReferralInfo, getWalletSummary } from '../../lib/api/wallet'
+import { getSoundsEnabled, playSound, setSoundsEnabled } from '../../lib/sounds'
 
 function formatDate(value) {
   if (!value) return 'Unknown'
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return 'Unknown'
   return date.toLocaleDateString('en-GB')
-}
-
-function playToggleSound(enabled) {
-  if (!enabled || typeof window === 'undefined') return
-  const AudioContext = window.AudioContext || window.webkitAudioContext
-  if (!AudioContext) return
-
-  const audioContext = new AudioContext()
-  const oscillator = audioContext.createOscillator()
-  const gain = audioContext.createGain()
-  oscillator.frequency.value = 640
-  oscillator.type = 'sine'
-  gain.gain.setValueAtTime(0.0001, audioContext.currentTime)
-  gain.gain.exponentialRampToValueAtTime(0.06, audioContext.currentTime + 0.01)
-  gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.12)
-  oscillator.connect(gain)
-  gain.connect(audioContext.destination)
-  oscillator.start()
-  oscillator.stop(audioContext.currentTime + 0.12)
-  oscillator.addEventListener('ended', () => audioContext.close(), { once: true })
 }
 
 function ProfilePage() {
@@ -46,10 +27,7 @@ function ProfilePage() {
     if (typeof window === 'undefined') return true
     return window.localStorage.getItem('flexpay-theme-enabled') !== 'false'
   })
-  const [soundsEnabled, setSoundsEnabled] = useState(() => {
-    if (typeof window === 'undefined') return true
-    return window.localStorage.getItem('flexpay-sounds-enabled') !== 'false'
-  })
+  const [soundsEnabled, setSoundsEnabledState] = useState(() => getSoundsEnabled())
   const fileInputRef = useRef(null)
 
   useEffect(() => {
@@ -75,7 +53,7 @@ function ProfilePage() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    window.localStorage.setItem('flexpay-sounds-enabled', soundsEnabled ? 'true' : 'false')
+    setSoundsEnabled(soundsEnabled)
   }, [soundsEnabled])
 
   const referralCode = useMemo(() => {
@@ -245,7 +223,7 @@ function ProfilePage() {
                 type="button"
                 onClick={() => {
                   setThemeEnabled((value) => !value)
-                  playToggleSound(soundsEnabled)
+                  if (soundsEnabled) playSound('toggle')
                 }}
                 className={`relative inline-flex h-8 w-14 items-center rounded-full border ${themeEnabled ? 'border-brand-lime bg-brand-lime/20' : 'border-brand-border/70 bg-[rgba(198,241,53,0.08)]'}`}
                 aria-label="Toggle dark mode"
@@ -264,8 +242,10 @@ function ProfilePage() {
               <button
                 type="button"
                 onClick={() => {
-                  playToggleSound(soundsEnabled)
-                  setSoundsEnabled((value) => !value)
+                  const nextValue = !soundsEnabled
+                  setSoundsEnabledState(nextValue)
+                  setSoundsEnabled(nextValue)
+                  if (nextValue) playSound('toggle')
                 }}
                 className={`relative inline-flex h-8 w-14 items-center rounded-full border ${soundsEnabled ? 'border-brand-lime bg-brand-lime/20' : 'border-brand-border/70 bg-[rgba(198,241,53,0.08)]'}`}
                 aria-label="Toggle sounds"
