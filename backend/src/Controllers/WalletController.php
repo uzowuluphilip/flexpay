@@ -81,12 +81,12 @@ final class WalletController
         }
 
         $roll = random_int(1, 100);
-        if ($roll <= 20) {
+        if ($roll <= 5) {
             $outcome = 'win';
             $transactionType = 'spin_win';
             $resultKobo = $stakeKobo * 2;
             $message = 'You landed on: Win — your stake was doubled.';
-        } elseif ($roll <= 50) {
+        } elseif ($roll <= 40) {
             $outcome = 'lose';
             $transactionType = 'spin_loss';
             $resultKobo = -$stakeKobo;

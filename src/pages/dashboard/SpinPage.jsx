@@ -9,22 +9,23 @@ const tiers = [
   { name: 'Bronze', amount: 25000, icon: Trophy, accent: 'from-[#fbbf7b] to-[#f97316]' },
   { name: 'Silver', amount: 50000, icon: Gem, accent: 'from-[#c4b5fd] to-[#818cf8]' },
 ]
+const wheelColors = {
+  lose: ['#7f1d3a', '#c45b70'],
+  win: ['#567a15', '#b2e32f'],
+  try_again: ['#11616a', '#3ea9a1'],
+}
 const wheelSegments = [
-  { label: 'LOSE', colors: ['#7f1d3a', '#c45b70'] },
-  { label: 'WIN', colors: ['#567a15', '#b2e32f'] },
-  { label: 'TRY AGAIN', colors: ['#8a5a10', '#d39a36'] },
-  { label: 'LOSE', colors: ['#572268', '#9b4eaa'] },
-  { label: 'WIN', colors: ['#2b6e51', '#72d69b'] },
-  { label: 'TRY AGAIN', colors: ['#11616a', '#3ea9a1'] },
+  ...Array.from({ length: 7 }, () => ({ label: 'LOSE', colors: wheelColors.lose, outcome: 'lose' })),
+  { label: 'WIN', colors: wheelColors.win, outcome: 'win' },
+  ...Array.from({ length: 12 }, () => ({ label: 'TRY AGAIN', colors: wheelColors.try_again, outcome: 'try_again' })),
 ]
 const wheelCenter = 200
 const wheelRadius = 184
 const segmentAngle = 360 / wheelSegments.length
-const outcomeSegments = {
-  lose: [0, 3],
-  win: [1, 4],
-  try_again: [2, 5],
-}
+const outcomeSegments = wheelSegments.reduce((segments, segment, index) => {
+  segments[segment.outcome].push(index)
+  return segments
+}, { lose: [], win: [], try_again: [] })
 
 function getOutcomeRotation(currentRotation, outcome) {
   const segments = outcomeSegments[outcome] || outcomeSegments.try_again
