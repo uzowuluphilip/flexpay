@@ -9,15 +9,13 @@ const tiers = [
   { name: 'Bronze', amount: 25000, icon: Trophy, accent: 'from-[#fbbf7b] to-[#f97316]' },
   { name: 'Silver', amount: 50000, icon: Gem, accent: 'from-[#c4b5fd] to-[#818cf8]' },
 ]
-const wheelColors = {
-  lose: ['#7f1d3a', '#c45b70'],
-  win: ['#567a15', '#b2e32f'],
-  try_again: ['#11616a', '#3ea9a1'],
-}
 const wheelSegments = [
-  ...Array.from({ length: 7 }, () => ({ label: 'LOSE', colors: wheelColors.lose, outcome: 'lose' })),
-  { label: 'WIN', colors: wheelColors.win, outcome: 'win' },
-  ...Array.from({ length: 12 }, () => ({ label: 'TRY AGAIN', colors: wheelColors.try_again, outcome: 'try_again' })),
+  { label: 'LOSE', colors: ['#7f1d3a', '#c45b70'], outcome: 'lose' },
+  { label: 'WIN', colors: ['#567a15', '#b2e32f'], outcome: 'win' },
+  { label: 'TRY AGAIN', colors: ['#8a5a10', '#d39a36'], outcome: 'try_again' },
+  { label: 'LOSE', colors: ['#572268', '#9b4eaa'], outcome: 'lose' },
+  { label: 'WIN', colors: ['#2b6e51', '#72d69b'], outcome: 'win' },
+  { label: 'TRY AGAIN', colors: ['#11616a', '#3ea9a1'], outcome: 'try_again' },
 ]
 const wheelCenter = 200
 const wheelRadius = 184
