@@ -14,11 +14,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "../../components/dashboard/BottomNav";
 import { getWalletSummary, playSpin } from "../../lib/api/wallet";
-import {
-  playSound,
-  startSpinSound,
-  stopSpinSound,
-} from "../../lib/sounds";
+import { playSound } from "../../lib/sounds";
 
 const tiers = [
   {
@@ -48,8 +44,6 @@ const wheelSegments = [
   { label: "WIN", colors: ["#2b6e51", "#72d69b"], outcome: "win" },
   { label: "TRY AGAIN", colors: ["#11616a", "#3ea9a1"], outcome: "try_again" },
 ];
-const wheelCenter = 200;
-const wheelRadius = 184;
 const segmentAngle = 360 / wheelSegments.length;
 const outcomeSegments = wheelSegments.reduce(
   (segments, segment, index) => {
@@ -67,18 +61,86 @@ function getOutcomeRotation(currentRotation, outcome) {
   return currentRotation + 1440 + offset;
 }
 
-function wheelPoint(angle, radius) {
-  const radians = ((angle - 90) * Math.PI) / 180;
-  return {
-    x: wheelCenter + radius * Math.cos(radians),
-    y: wheelCenter + radius * Math.sin(radians),
-  };
-}
+function WheelCanvas({ rotation }) {
+  const canvasRef = useRef(null);
 
-function wheelSegmentPath(startAngle, endAngle) {
-  const start = wheelPoint(startAngle, wheelRadius);
-  const end = wheelPoint(endAngle, wheelRadius);
-  return `M ${wheelCenter} ${wheelCenter} L ${start.x} ${start.y} A ${wheelRadius} ${wheelRadius} 0 0 1 ${end.x} ${end.y} Z`;
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const container = canvas?.parentElement;
+    if (!canvas || !container) return undefined;
+    const context = canvas.getContext("2d");
+
+    const draw = () => {
+      const dpr = window.devicePixelRatio || 1;
+      const size = Math.min(container.clientWidth, container.clientHeight);
+      canvas.width = size * dpr;
+      canvas.height = size * dpr;
+      context.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const center = size / 2;
+      const radius = size / 2 - 6;
+      context.clearRect(0, 0, size, size);
+
+      wheelSegments.forEach((segment, index) => {
+        const start = ((index * segmentAngle - 90) * Math.PI) / 180;
+        const end = (((index + 1) * segmentAngle - 90) * Math.PI) / 180;
+        const gradient = context.createLinearGradient(0, 0, size, size);
+        gradient.addColorStop(0, segment.colors[0]);
+        gradient.addColorStop(1, segment.colors[1]);
+        context.beginPath();
+        context.moveTo(center, center);
+        context.arc(center, center, radius, start, end);
+        context.closePath();
+        context.fillStyle = gradient;
+        context.fill();
+        context.strokeStyle = "rgba(0, 0, 0, 0.55)";
+        context.lineWidth = 2;
+        context.stroke();
+
+        const middle = ((index * segmentAngle + segmentAngle / 2 - 90) * Math.PI) / 180;
+        context.save();
+        context.translate(center, center);
+        context.rotate(middle);
+        context.translate(radius * 0.34, 0);
+        if (Math.cos(middle) < 0) context.rotate(Math.PI);
+        context.textAlign = "center";
+        context.textBaseline = "middle";
+        context.font = `700 ${segment.label.length > 8 ? Math.max(12, size * 0.035) : Math.max(14, size * 0.045)}px var(--font-display)`;
+        context.lineWidth = 4;
+        context.strokeStyle = "rgba(0, 0, 0, 0.42)";
+        context.fillStyle = "#fff";
+        context.strokeText(segment.label, 0, 0);
+        context.fillText(segment.label, 0, 0);
+        context.restore();
+      });
+
+      const dotRadius = radius - 10;
+      for (let index = 0; index < wheelSegments.length * 6; index += 1) {
+        const angle = ((index * (360 / (wheelSegments.length * 6)) - 90) * Math.PI) / 180;
+        context.beginPath();
+        context.arc(center + Math.cos(angle) * dotRadius, center + Math.sin(angle) * dotRadius, index % 2 === 0 ? 3.4 : 2.4, 0, Math.PI * 2);
+        context.fillStyle = index % 2 === 0 ? "#e8ff6b" : "rgba(255,255,255,0.85)";
+        context.shadowColor = index % 2 === 0 ? "#e8ff6b" : "transparent";
+        context.shadowBlur = index % 2 === 0 ? 6 : 0;
+        context.fill();
+      }
+      context.shadowBlur = 0;
+      context.beginPath();
+      context.arc(center, center, radius, 0, Math.PI * 2);
+      const rim = context.createLinearGradient(0, center - radius, 0, center + radius);
+      rim.addColorStop(0, "#f2f2f5");
+      rim.addColorStop(0.5, "#9b96a8");
+      rim.addColorStop(1, "#e9e8ee");
+      context.lineWidth = 10;
+      context.strokeStyle = rim;
+      context.stroke();
+    };
+
+    draw();
+    window.addEventListener("resize", draw);
+    return () => window.removeEventListener("resize", draw);
+  }, []);
+
+  return <canvas ref={canvasRef} className="h-full w-full" style={{ transform: `rotate(${rotation}deg)` }} aria-label="Prize wheel" role="img" />;
 }
 
 function FireworkWin({ amount, onComplete }) {
@@ -194,23 +256,32 @@ export default function SpinPage() {
   const [tab, setTab] = useState("play");
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
+  const [pointerTick, setPointerTick] = useState(false);
   const [result, setResult] = useState("");
+  const [resultType, setResultType] = useState("");
   const [winAmount, setWinAmount] = useState(null);
   const [balance, setBalance] = useState(null);
   const [error, setError] = useState("");
+  const animationRef = useRef(null);
+  const pointerTimerRef = useRef(null);
 
   useEffect(() => {
     getWalletSummary()
       .then((wallet) => setBalance(wallet.balance))
       .catch((err) => setError(err.message));
 
-    return () => stopSpinSound();
+    return () => {
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+      if (pointerTimerRef.current) window.clearTimeout(pointerTimerRef.current);
+    };
   }, []);
 
   const spin = async () => {
     if (spinning) return;
     setResult("");
+    setResultType("");
     setError("");
+    setWinAmount(null);
     const stake =
       manualStake === "" ? selectedTier.amount : Number(manualStake);
     if (!Number.isInteger(stake) || stake < 10000 || stake > 500000) {
@@ -218,22 +289,52 @@ export default function SpinPage() {
       return;
     }
     setSpinning(true);
-    startSpinSound();
+    playSound("spin");
     try {
       const spinResult = await playSpin(stake);
-      setRotation((current) => getOutcomeRotation(current, spinResult.outcome));
-      window.setTimeout(() => {
-        stopSpinSound();
+      const startRotation = rotation;
+      const targetRotation = getOutcomeRotation(startRotation, spinResult.outcome);
+      const duration = 4200 + Math.random() * 500;
+      const startTime = performance.now();
+      let lastSegmentCrossed = Math.floor(startRotation / segmentAngle);
+
+      const frame = (now) => {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const nextRotation = startRotation + (targetRotation - startRotation) * eased;
+        setRotation(nextRotation);
+
+        const segmentNow = Math.floor(nextRotation / segmentAngle);
+        if (segmentNow > lastSegmentCrossed) {
+          const crossedCount = segmentNow - lastSegmentCrossed;
+          for (let index = 0; index < crossedCount; index += 1) playSound("spinTick");
+          lastSegmentCrossed = segmentNow;
+          if (pointerTimerRef.current) window.clearTimeout(pointerTimerRef.current);
+          setPointerTick(true);
+          pointerTimerRef.current = window.setTimeout(() => setPointerTick(false), 70);
+        }
+
+        if (progress < 1) {
+          animationRef.current = requestAnimationFrame(frame);
+          return;
+        }
+
         setSpinning(false);
         setResult(spinResult.message);
+        setResultType(spinResult.outcome);
         setBalance(spinResult.balance);
         if (spinResult.outcome === "win") {
           setWinAmount(Number(spinResult.resultKobo || 0) / 100);
-          playSound("reward");
+          playSound("win");
+        } else if (spinResult.outcome === "lose") {
+          playSound("lose");
+        } else {
+          playSound("tryAgain");
         }
-      }, 2200);
+      };
+
+      animationRef.current = requestAnimationFrame(frame);
     } catch (err) {
-      stopSpinSound();
       setSpinning(false);
       setError(err.message);
     }
@@ -427,159 +528,19 @@ export default function SpinPage() {
             />
           ) : null}
           <div className="relative mx-auto w-full max-w-[22rem] rounded-full p-2 shadow-[0_22px_50px_rgba(0,0,0,0.42)] before:absolute before:inset-[-2rem] before:-z-10 before:rounded-full before:bg-[radial-gradient(circle,rgba(198,241,53,0.18),rgba(124,58,237,0.1)_42%,transparent_72%)] sm:max-w-[26rem]">
-            <div className="absolute -top-4 left-1/2 z-20 -translate-x-1/2 text-brand-lime drop-shadow-[0_4px_8px_rgba(198,241,53,0.55)]">
+            <div className={`absolute -top-4 left-1/2 z-20 -translate-x-1/2 text-brand-lime drop-shadow-[0_4px_8px_rgba(198,241,53,0.55)] transition-transform duration-75 ${pointerTick ? "scale-[0.85] -rotate-6" : ""}`}>
               <ChevronRight className="rotate-90 fill-brand-lime" size={30} />
             </div>
-            <div
-              className="relative aspect-square"
-              style={{
-                transform: `rotate(${rotation}deg)`,
-                transition: spinning
-                  ? "transform 2.2s cubic-bezier(0.16, 1, 0.3, 1)"
-                  : "none",
-              }}
-            >
-              <svg
-                viewBox="0 0 400 400"
-                className="h-full w-full overflow-visible"
-                role="img"
-                aria-label="Prize wheel with win, lose, and try again segments"
-              >
-                <defs>
-                  {wheelSegments.map((segment, index) => (
-                    <linearGradient
-                      key={segment.label + index}
-                      id={`wheel-gradient-${index}`}
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="0%" stopColor={segment.colors[0]} />
-                      <stop offset="100%" stopColor={segment.colors[1]} />
-                    </linearGradient>
-                  ))}
-                  <radialGradient id="wheel-hub-gradient" cx="35%" cy="30%">
-                    <stop offset="0%" stopColor="#31274f" />
-                    <stop offset="70%" stopColor="#17112d" />
-                    <stop offset="100%" stopColor="#090711" />
-                  </radialGradient>
-                  <linearGradient
-                    id="wheel-rim-gradient"
-                    x1="0"
-                    y1="0"
-                    x2="1"
-                    y2="1"
-                  >
-                    <stop offset="0%" stopColor="#f8fafc" />
-                    <stop offset="35%" stopColor="#94a3b8" />
-                    <stop offset="60%" stopColor="#f1f5f9" />
-                    <stop offset="100%" stopColor="#64748b" />
-                  </linearGradient>
-                </defs>
-                <circle
-                  cx="200"
-                  cy="200"
-                  r="190"
-                  fill="#080611"
-                  opacity="0.8"
-                />
-                {wheelSegments.map((segment, index) => {
-                  const startAngle = index * segmentAngle;
-                  const labelAngle = startAngle + segmentAngle / 2;
-                  const labelRotation =
-                    labelAngle > 90 && labelAngle < 270 ? 180 : 0;
-                  return (
-                    <g key={segment.label + index}>
-                      <path
-                        d={wheelSegmentPath(
-                          startAngle,
-                          startAngle + segmentAngle,
-                        )}
-                        fill={`url(#wheel-gradient-${index})`}
-                        stroke="#100b1c"
-                        strokeWidth="2"
-                      />
-                      <g transform={`rotate(${labelAngle} 200 200)`}>
-                        <text
-                          x="200"
-                          y="93"
-                          transform={
-                            labelRotation ? "rotate(180 200 93)" : undefined
-                          }
-                          fill="#fff"
-                          fontSize={segment.label.length > 8 ? 13 : 15}
-                          fontWeight="800"
-                          letterSpacing="0.5"
-                          textAnchor="middle"
-                          dominantBaseline="middle"
-                          style={{
-                            paintOrder: "stroke",
-                            stroke: "rgba(9, 7, 17, 0.72)",
-                            strokeWidth: 4,
-                          }}
-                        >
-                          {segment.label}
-                        </text>
-                      </g>
-                    </g>
-                  );
-                })}
-                <circle
-                  cx="200"
-                  cy="200"
-                  r="190"
-                  fill="none"
-                  stroke="url(#wheel-rim-gradient)"
-                  strokeWidth="9"
-                />
-                {Array.from({ length: 24 }, (_, index) => {
-                  const point = wheelPoint(index * 15, 190);
-                  return (
-                    <circle
-                      key={index}
-                      cx={point.x}
-                      cy={point.y}
-                      r="3.5"
-                      fill={index % 2 === 0 ? "#f8fafc" : "#c6f135"}
-                      style={{
-                        filter: `drop-shadow(0 0 4px ${index % 2 === 0 ? "rgba(248,250,252,0.8)" : "rgba(198,241,53,0.9)"})`,
-                      }}
-                    />
-                  );
-                })}
-                <circle
-                  cx="200"
-                  cy="200"
-                  r="47"
-                  fill="#080611"
-                  opacity="0.65"
-                />
-                <circle
-                  cx="200"
-                  cy="200"
-                  r="41"
-                  fill="url(#wheel-hub-gradient)"
-                  stroke="#b8c1cf"
-                  strokeOpacity="0.7"
-                  strokeWidth="3"
-                />
-                <circle
-                  cx="200"
-                  cy="200"
-                  r="9"
-                  fill="#c6f135"
-                  style={{
-                    filter: "drop-shadow(0 0 7px rgba(198,241,53,0.9))",
-                  }}
-                />
-                <circle cx="197" cy="197" r="3" fill="#f4f1ff" opacity="0.9" />
-              </svg>
+            <div className="relative aspect-square">
+              <WheelCanvas rotation={rotation} />
+              <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 flex h-[21%] w-[21%] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-[3px] border-[#cfc7de] bg-[radial-gradient(circle_at_35%_30%,#2a2140,#0d0916_70%)] shadow-[0_0_0_2px_rgba(0,0,0,0.5),0_0_18px_rgba(0,0,0,0.6)_inset]">
+                <span className="h-[22%] w-[22%] rounded-full bg-[#e8d24d] shadow-[0_0_16px_4px_rgba(232,210,77,0.85)]" />
+              </div>
             </div>
           </div>
-          <p className="mt-5 min-h-7 text-lg font-semibold">
-            {spinning ? "Spinning..." : result || "Ready to spin"}
-          </p>
+          <div className={`result-badge ${resultType || ""}`}>
+            {spinning ? "Spinning..." : resultType === "win" ? "You Win!" : resultType === "lose" ? "You Lose" : resultType === "try_again" ? "Try Again" : result || "Ready to spin"}
+          </div>
           <p className="mt-3 text-xs text-brand-muted">
             Win 70% · Retry 10% · Lose 20% — server-authoritative odds
           </p>

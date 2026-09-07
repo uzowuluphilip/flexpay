@@ -78,11 +78,18 @@ export function playSound(type = 'tap') {
       { frequency: 700, duration: 0.09, type: 'triangle', volume: 0.17 },
       { frequency: 980, duration: 0.16, type: 'sine', volume: 0.18 },
     ],
-    spin: [
-      { frequency: 220, duration: 0.08, type: 'triangle', volume: 0.12 },
-      { frequency: 300, duration: 0.08, type: 'triangle', volume: 0.13 },
-      { frequency: 390, duration: 0.08, type: 'triangle', volume: 0.14 },
-      { frequency: 500, duration: 0.1, type: 'sine', volume: 0.15 },
+    spinTick: [{ frequency: 1250, duration: 0.04, type: 'square', volume: 0.2 }],
+    spin: [{ frequency: 360, duration: 0.12, type: 'triangle', volume: 0.15 }],
+    win: [
+      { frequency: 523.25, duration: 0.28, type: 'sine', volume: 0.22 },
+      { frequency: 659.25, duration: 0.28, type: 'sine', volume: 0.22 },
+      { frequency: 784, duration: 0.28, type: 'sine', volume: 0.24 },
+      { frequency: 1046.5, duration: 0.32, type: 'sine', volume: 0.26 },
+    ],
+    lose: [{ frequency: 220, duration: 0.4, type: 'sawtooth', volume: 0.18 }],
+    tryAgain: [
+      { frequency: 440, duration: 0.18, type: 'triangle', volume: 0.2 },
+      { frequency: 370, duration: 0.2, type: 'triangle', volume: 0.2 },
     ],
     error: [{ frequency: 180, duration: 0.14, type: 'sawtooth', volume: 0.14 }],
     warning: [{ frequency: 260, duration: 0.12, type: 'square', volume: 0.12 }],
