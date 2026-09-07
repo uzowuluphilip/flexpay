@@ -100,7 +100,7 @@ export default function LoanPage() {
     try {
       setBusy(true)
       await submitLoanUnlockReceipt(unlockReceipt, token)
-      setNotice('Loan unlock payment submitted. Admin review is required before the loan feature opens.')
+      setNotice('Loan unlock payment submitted. Review is required within 1 hour before the loan feature opens.')
       setUnlockReceipt(null)
       await load()
     } catch (requestError) {

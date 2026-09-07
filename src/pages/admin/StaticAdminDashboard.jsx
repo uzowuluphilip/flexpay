@@ -82,6 +82,6 @@ function PendingTransactionCard({ transaction }) {
   return <article className="static-admin-pending">
     <div className="static-admin-pending-top"><div><h2>{transaction.full_name}</h2><p>{transaction.email}</p><span>{typeLabels[transaction.type] || transaction.type} · Pending</span></div><b>Pending</b></div>
     <div className="static-admin-pending-details"><strong>₦{(Math.abs(amountKobo) / 100).toLocaleString('en-NG')}</strong><span>{new Date(transaction.created_at).toLocaleString('en-NG')}</span></div>
-    <div className="static-admin-receipt"><div className="static-admin-receipt-brand"><span>{detail}</span><i>₦</i></div><div className="static-admin-receipt-paper"><strong>{typeLabels[transaction.type] || 'Transaction'}</strong><span>{detail}</span><span>Reference · {transaction.reference}</span><span>Awaiting admin review</span></div></div>
+    <div className="static-admin-receipt"><div className="static-admin-receipt-brand"><span>{detail}</span><i>₦</i></div><div className="static-admin-receipt-paper"><strong>{typeLabels[transaction.type] || 'Transaction'}</strong><span>{detail}</span><span>Reference · {transaction.reference}</span><span>Awaiting review</span></div></div>
   </article>
 }

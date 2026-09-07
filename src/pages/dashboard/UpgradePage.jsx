@@ -213,7 +213,7 @@ function LoadingStage({ tier }) {
         <p className="mt-4 text-sm text-brand-muted">Preparing a secure payment account for<br /><span className="font-semibold text-brand-text">{formatNaira(upgradePrice)}</span></p>
         <div className="mt-7 h-2 overflow-hidden rounded-full bg-brand-panel"><div className="h-full bg-gradient-to-r from-emerald-400 to-sky-400 transition-[width] duration-[2000ms] linear" style={{ width: `${progress}%` }} /></div>
         <p className="mt-3 text-xs text-brand-muted">Generating account number...</p>
-        <p className="mt-7 text-xs text-emerald-400">Manual payment review applies after receipt upload.</p>
+        <p className="mt-7 text-xs text-emerald-400">Payment review applies after receipt upload.</p>
       </section>
     </div>
   )
@@ -221,7 +221,7 @@ function LoadingStage({ tier }) {
 
 function LegacyPaymentStage({ tier, config, file, error, submitted, onBack, onFile, onSubmit, onHome }) {
   if (submitted) {
-    return <div className="flex min-h-screen items-center justify-center bg-brand-base px-4 pb-24 text-brand-text"><section className="w-full max-w-md rounded-[1.75rem] border border-brand-border/70 bg-brand-panel/95 p-8 text-center"><Check className="mx-auto text-brand-lime" size={48} /><h1 className="mt-5 text-2xl font-bold">Payment submitted</h1><p className="mt-3 text-sm text-brand-muted">Your receipt is ready for manual review.</p><button type="button" onClick={onHome} className="mt-7 w-full rounded-2xl bg-brand-lime px-4 py-3 font-semibold text-brand-base">Return home</button></section></div>
+    return <div className="flex min-h-screen items-center justify-center bg-brand-base px-4 pb-24 text-brand-text"><section className="w-full max-w-md rounded-[1.75rem] border border-brand-border/70 bg-brand-panel/95 p-8 text-center"><Check className="mx-auto text-brand-lime" size={48} /><h1 className="mt-5 text-2xl font-bold">Payment submitted</h1><p className="mt-3 text-sm text-brand-muted">Your receipt is ready for review.</p><button type="button" onClick={onHome} className="mt-7 w-full rounded-2xl bg-brand-lime px-4 py-3 font-semibold text-brand-base">Return home</button></section></div>
   }
 
   return (
@@ -257,7 +257,7 @@ function PaymentStage({ tier, config, file, error, submitted, onBack, onFile, on
   const upgradePrice = tier.upgradePrice ?? tier.rate
 
   if (submitted) {
-    return <div className="flex min-h-screen items-center justify-center bg-brand-base px-4 pb-24 text-brand-text"><section className="w-full max-w-md rounded-[1.75rem] border border-brand-border/70 bg-brand-panel/95 p-8 text-center"><Check className="mx-auto text-brand-lime" size={48} /><h1 className="mt-5 text-2xl font-bold">Payment submitted</h1><p className="mt-3 text-sm text-brand-muted">Your receipt is ready for manual review.</p><button type="button" onClick={onHome} className="mt-7 w-full rounded-2xl bg-brand-lime px-4 py-3 font-semibold text-brand-base">Return home</button></section></div>
+    return <div className="flex min-h-screen items-center justify-center bg-brand-base px-4 pb-24 text-brand-text"><section className="w-full max-w-md rounded-[1.75rem] border border-brand-border/70 bg-brand-panel/95 p-8 text-center"><Check className="mx-auto text-brand-lime" size={48} /><h1 className="mt-5 text-2xl font-bold">Payment submitted</h1><p className="mt-3 text-sm text-brand-muted">Your receipt is ready for review.</p><button type="button" onClick={onHome} className="mt-7 w-full rounded-2xl bg-brand-lime px-4 py-3 font-semibold text-brand-base">Return home</button></section></div>
   }
 
   return (
