@@ -1,3 +1,4 @@
+import { ArrowLeft } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import logo from '../assets/brand/flexpay-logo.svg'
 
@@ -6,7 +7,11 @@ function AuthLayout({ children, title, subtitle, footerLink, footerHref }) {
   return (
     <div className="min-h-screen bg-brand-base px-4 py-6 text-brand-text sm:px-6 sm:py-8 lg:px-8">
       <div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-5xl flex-col justify-center">
-        <div className="mx-auto w-full max-w-[480px] rounded-[1.75rem] border border-brand-border/70 bg-[rgba(21,15,46,0.88)] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] sm:p-8">
+        <div className="mx-auto w-full max-w-[480px]">
+          <Link to="/" className="mb-4 inline-flex min-h-11 items-center gap-2 rounded-full border border-brand-border/70 bg-[rgba(21,15,46,0.72)] px-4 py-2 text-sm font-semibold text-brand-muted transition hover:border-brand-lime hover:text-brand-lime">
+            <ArrowLeft size={16} /> Back to Home
+          </Link>
+          <div className="rounded-[1.75rem] border border-brand-border/70 bg-[rgba(21,15,46,0.88)] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] sm:p-8">
           <div className="mb-6 text-center">
             <Link to="/" className="inline-flex items-center justify-center">
               <img src={logo} alt="FlexPay logo" className="h-9 w-auto" />
@@ -34,6 +39,7 @@ function AuthLayout({ children, title, subtitle, footerLink, footerHref }) {
             <Link to={location.pathname === '/login' ? '/register' : '/login'} className="font-semibold text-brand-lime transition hover:text-[#f6c353]">
               {location.pathname === '/login' ? "Don't have an account? Create one" : 'Already have an account? Sign in'}
             </Link>
+          </div>
           </div>
         </div>
       </div>
