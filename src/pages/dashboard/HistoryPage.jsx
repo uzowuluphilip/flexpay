@@ -73,6 +73,7 @@ function HistoryPage() {
                     </div>
                     <div className="min-w-0">
                       <p className="font-semibold text-brand-text">{it.title}</p>
+                      {it.description ? <p className="mt-1 text-xs text-brand-muted">{it.description}</p> : null}
                       <p className="text-xs text-brand-muted">{formatDateTime(it.timestamp)} · {it.status}</p>
                     </div>
                   </div>

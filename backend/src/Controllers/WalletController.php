@@ -423,7 +423,7 @@ final class WalletController
     {
         $user = $this->requireUser($request);
         $stmt = $this->db->prepare(
-            'SELECT t.id, t.type, t.amount_kobo, t.status, t.reference, t.created_at,
+            'SELECT t.id, t.type, t.amount_kobo, t.status, t.reference, t.meta, t.created_at,
                     COALESCE(wr.status, tr.status, t.status) AS review_status
              FROM transactions t
              LEFT JOIN withdrawal_requests wr ON wr.transaction_id = t.id
@@ -448,14 +448,18 @@ final class WalletController
                 'spin_win' => 'Spin reward',
                 'spin_loss' => 'Spin result',
                 'spin_try' => 'Spin result',
-                'admin_adjustment' => 'Admin balance adjustment',
+                'admin_adjustment' => 'Credited',
             ];
+            $meta = json_decode((string) ($row['meta'] ?? '{}'), true) ?: [];
+            $description = $row['type'] === 'admin_adjustment' && !empty($meta['reason'])
+                ? (string) $meta['reason']
+                : 'Reference: ' . $row['reference'];
             $status = (string) ($row['review_status'] ?: $row['status']);
             $status = in_array($status, ['approved', 'paid'], true) ? 'completed' : ($status === 'failed' ? 'rejected' : $status);
             return [
                 'id' => (int) $row['id'],
                 'title' => $titles[$row['type']] ?? ucwords(str_replace('_', ' ', (string) $row['type'])),
-                'description' => 'Reference: ' . $row['reference'],
+                'description' => $description,
                 'amount' => abs($amount) / 100,
                 'time' => date('d M, H:i', strtotime($row['created_at'])),
                 'timestamp' => $row['created_at'],

@@ -212,6 +212,7 @@ export async function getTransactionHistory() {
     id: item.id,
     type: item.type || 'activity',
     title: item.title || item.description || 'Activity',
+    description: item.description || '',
     timestamp: item.timestamp || new Date().toISOString(),
     amount: Number(item.amount ?? 0),
     credit: item.credit ?? true,
