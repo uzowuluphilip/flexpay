@@ -35,6 +35,7 @@ import AchievementsPage from './pages/dashboard/AchievementsPage'
 import SpinPage from './pages/dashboard/SpinPage'
 import LeadersPage from './pages/dashboard/LeadersPage'
 import WithdrawalActivityToast from './components/WithdrawalActivityToast'
+import SpinWinActivityToast from './components/SpinWinActivityToast'
 import NotificationPrompt from './components/NotificationPrompt'
 import RequestStatusToast from './components/RequestStatusToast'
 import OnboardingPage from './pages/auth/OnboardingPage'
@@ -99,6 +100,7 @@ function App() {
           </Routes>
         </RouteTransitionLayout>
         <WithdrawalActivityToast />
+        <SpinWinActivityToast />
         <NotificationPrompt />
         <RequestStatusToast />
       </Router>
