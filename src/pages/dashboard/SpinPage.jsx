@@ -13,7 +13,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "../../components/dashboard/BottomNav";
-import { getSpinStats, getWalletSummary, playSpin } from "../../lib/api/wallet";
+import { getSpinHistory, getSpinStats, getWalletSummary, playSpin } from "../../lib/api/wallet";
 import { playSound } from "../../lib/sounds";
 
 const tiers = [
@@ -262,6 +262,7 @@ export default function SpinPage() {
   const [winAmount, setWinAmount] = useState(null);
   const [balance, setBalance] = useState(null);
   const [spinStats, setSpinStats] = useState({ spins: 0, wins: 0, losses: 0, tryAgain: 0, winRate: 0 });
+  const [spinHistory, setSpinHistory] = useState([]);
   const [error, setError] = useState("");
   const animationRef = useRef(null);
   const pointerTimerRef = useRef(null);
@@ -272,6 +273,9 @@ export default function SpinPage() {
       .catch((err) => setError(err.message));
     getSpinStats()
       .then(setSpinStats)
+      .catch((err) => setError(err.message));
+    getSpinHistory()
+      .then(setSpinHistory)
       .catch((err) => setError(err.message));
 
     return () => {
@@ -328,6 +332,7 @@ export default function SpinPage() {
         setResultType(spinResult.outcome);
         setBalance(spinResult.balance);
         getSpinStats().then(setSpinStats).catch(() => undefined);
+        getSpinHistory().then(setSpinHistory).catch(() => undefined);
         if (spinResult.outcome === "win") {
           setWinAmount(Number(spinResult.resultKobo || 0) / 100);
           playSound("win");
@@ -343,6 +348,11 @@ export default function SpinPage() {
       setSpinning(false);
       setError(err.message);
     }
+  };
+
+  const showHistory = () => {
+    setTab("history");
+    getSpinHistory().then(setSpinHistory).catch((err) => setError(err.message));
   };
 
   return (
@@ -425,7 +435,7 @@ export default function SpinPage() {
                   key={key}
                   type="button"
                   onClick={() =>
-                    key === "leaders" ? navigate("/leaders") : setTab(key)
+                    key === "leaders" ? navigate("/leaders") : key === "history" ? showHistory() : setTab(key)
                   }
                   className={`min-h-11 rounded-full px-4 text-sm font-semibold ${tab === key ? "bg-brand-lime text-brand-base" : "text-brand-muted"}`}
                 >
@@ -508,23 +518,16 @@ export default function SpinPage() {
               ) : null}
             </section>
           </>
-        ) : (
-          <section className="mt-12 rounded-[1.5rem] border border-dashed border-brand-border/70 bg-brand-panel/70 p-10 text-center">
-            <Clock3 className="mx-auto text-brand-lime" size={32} />
-            <h2 className="mt-4 text-xl font-semibold">
-              Spin history coming soon
-            </h2>
-            <p className="mt-2 text-sm text-brand-muted">
-              This step is not built yet.
-            </p>
-            <button
-              type="button"
-              onClick={() => setTab("play")}
-              className="mt-5 rounded-full bg-brand-lime px-4 py-2 text-sm font-semibold text-brand-base"
-            >
-              Back to Play
-            </button>
+        ) : tab === "history" ? (
+          <section className="mt-5 rounded-[1.5rem] border border-brand-border/70 bg-brand-panel/90 p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div><p className="text-xs uppercase tracking-[0.28em] text-brand-muted">Spin history</p><h2 className="mt-1 text-xl font-semibold">Recent spins</h2></div>
+              <button type="button" onClick={() => setTab("play")} className="min-h-11 rounded-full bg-brand-lime px-4 py-2 text-sm font-semibold text-brand-base">Back to Play</button>
+            </div>
+            {spinHistory.length === 0 ? <div className="py-12 text-center"><Clock3 className="mx-auto text-brand-lime" size={32} /><p className="mt-4 text-brand-muted">No spins yet.</p></div> : <div className="mt-5 space-y-3">{spinHistory.map((spinItem) => <div key={spinItem.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-border/70 bg-brand-base/40 p-4"><div><p className="font-semibold">{spinItem.outcome === "win" ? "You Win" : spinItem.outcome === "lose" ? "You Lose" : "Try Again"}</p><p className="mt-1 text-xs text-brand-muted">Stake ₦{spinItem.stake.toLocaleString("en-NG")} · {spinItem.spunAt ? new Date(spinItem.spunAt).toLocaleString("en-NG") : "Unknown time"}</p></div><div className={`text-right font-mono font-semibold ${spinItem.outcome === "win" ? "text-brand-lime" : spinItem.outcome === "lose" ? "text-red-300" : "text-brand-muted"}`}>{spinItem.result > 0 ? "+" : ""}₦{spinItem.result.toLocaleString("en-NG")}</div></div>)}</div>}
           </section>
+        ) : (
+          <section className="mt-12 rounded-[1.5rem] border border-dashed border-brand-border/70 bg-brand-panel/70 p-10 text-center"><Crown className="mx-auto text-brand-lime" size={32} /><h2 className="mt-4 text-xl font-semibold">Leaders coming soon</h2><button type="button" onClick={() => setTab("play")} className="mt-5 rounded-full bg-brand-lime px-4 py-2 text-sm font-semibold text-brand-base">Back to Play</button></section>
         )}
 
         <section className="relative mt-6 rounded-[1.5rem] border border-brand-border/70 bg-brand-panel/90 p-5 text-center">

@@ -162,6 +162,26 @@ final class WalletController
         ]);
     }
 
+    public function spinHistory(Request $request): void
+    {
+        $user = $this->requireUser($request);
+        $stmt = $this->db->prepare(
+            'SELECT id, stake_kobo, result_kobo, outcome, spun_at
+             FROM spins WHERE user_id = ? ORDER BY spun_at DESC, id DESC LIMIT 50'
+        );
+        $stmt->execute([(int) $user['id']]);
+
+        Response::success([
+            'history' => array_map(static fn (array $spin): array => [
+                'id' => (int) $spin['id'],
+                'stake' => (int) $spin['stake_kobo'] / 100,
+                'result' => (int) $spin['result_kobo'] / 100,
+                'outcome' => $spin['outcome'],
+                'spunAt' => $spin['spun_at'],
+            ], $stmt->fetchAll()),
+        ]);
+    }
+
     public function exchangeRate(Request $request): void
     {
         $cacheFile = dirname(__DIR__, 2) . '/cache/exchange-rate.json';

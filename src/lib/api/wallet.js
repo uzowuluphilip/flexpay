@@ -114,6 +114,17 @@ export async function getSpinStats() {
   }
 }
 
+export async function getSpinHistory() {
+  const data = await apiRequest('/api/spin/history', { token: getStoredToken() })
+  return Array.isArray(data.history) ? data.history.map((spin) => ({
+    id: Number(spin.id),
+    stake: Number(spin.stake ?? 0),
+    result: Number(spin.result ?? 0),
+    outcome: spin.outcome || 'try_again',
+    spunAt: spin.spunAt || spin.spun_at || null,
+  })) : []
+}
+
 export async function getExchangeRate() {
   const data = await apiRequest('/api/exchange-rate', { token: getStoredToken() })
   return Number(data.rate ?? 1359)
