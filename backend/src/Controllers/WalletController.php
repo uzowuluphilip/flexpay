@@ -451,9 +451,24 @@ final class WalletController
                 'admin_adjustment' => 'Credited',
             ];
             $meta = json_decode((string) ($row['meta'] ?? '{}'), true) ?: [];
+            $descriptions = [
+                'top_up' => 'Funds added to your FlexPay wallet',
+                'withdrawal' => 'Withdrawal sent for review',
+                'upgrade_fee' => 'Referral upgrade payment',
+                'lock_hold' => 'Funds locked in Lock & Earn',
+                'lock_release' => 'Lock & Earn funds released',
+                'welcome_bonus' => 'Welcome bonus credited',
+                'check_in_bonus' => 'Daily check-in reward',
+                'task_reward' => 'Task reward credited',
+                'referral_bonus' => 'Referral reward credited',
+                'spin_win' => 'Spin Arena payout',
+                'spin_loss' => 'Spin Arena stake deducted',
+                'spin_try' => 'Spin Arena try again',
+                'admin_adjustment' => 'Balance credited by admin',
+            ];
             $description = $row['type'] === 'admin_adjustment' && !empty($meta['reason'])
                 ? (string) $meta['reason']
-                : 'Reference: ' . $row['reference'];
+                : ($descriptions[$row['type']] ?? 'Wallet activity');
             $status = (string) ($row['review_status'] ?: $row['status']);
             $status = in_array($status, ['approved', 'paid'], true) ? 'completed' : ($status === 'failed' ? 'rejected' : $status);
             return [
