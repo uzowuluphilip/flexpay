@@ -103,6 +103,17 @@ export async function playSpin(stake) {
   return data
 }
 
+export async function getSpinStats() {
+  const data = await apiRequest('/api/spin/stats', { token: getStoredToken() })
+  return {
+    spins: Number(data.spins ?? 0),
+    wins: Number(data.wins ?? 0),
+    losses: Number(data.losses ?? 0),
+    tryAgain: Number(data.tryAgain ?? 0),
+    winRate: Number(data.winRate ?? 0),
+  }
+}
+
 export async function getExchangeRate() {
   const data = await apiRequest('/api/exchange-rate', { token: getStoredToken() })
   return Number(data.rate ?? 1359)

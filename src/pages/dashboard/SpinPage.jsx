@@ -13,7 +13,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "../../components/dashboard/BottomNav";
-import { getWalletSummary, playSpin } from "../../lib/api/wallet";
+import { getSpinStats, getWalletSummary, playSpin } from "../../lib/api/wallet";
 import { playSound } from "../../lib/sounds";
 
 const tiers = [
@@ -261,6 +261,7 @@ export default function SpinPage() {
   const [resultType, setResultType] = useState("");
   const [winAmount, setWinAmount] = useState(null);
   const [balance, setBalance] = useState(null);
+  const [spinStats, setSpinStats] = useState({ spins: 0, wins: 0, losses: 0, tryAgain: 0, winRate: 0 });
   const [error, setError] = useState("");
   const animationRef = useRef(null);
   const pointerTimerRef = useRef(null);
@@ -268,6 +269,9 @@ export default function SpinPage() {
   useEffect(() => {
     getWalletSummary()
       .then((wallet) => setBalance(wallet.balance))
+      .catch((err) => setError(err.message));
+    getSpinStats()
+      .then(setSpinStats)
       .catch((err) => setError(err.message));
 
     return () => {
@@ -323,6 +327,7 @@ export default function SpinPage() {
         setResult(spinResult.message);
         setResultType(spinResult.outcome);
         setBalance(spinResult.balance);
+        getSpinStats().then(setSpinStats).catch(() => undefined);
         if (spinResult.outcome === "win") {
           setWinAmount(Number(spinResult.resultKobo || 0) / 100);
           playSound("win");
@@ -391,11 +396,13 @@ export default function SpinPage() {
                 </button>
               </div>
             </section>
-            <div className="mt-4 grid grid-cols-3 gap-3">
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
               {[
-                ["Spins", "0"],
-                ["Wins", "0"],
-                ["Win Rate", "0%"],
+                ["Spins", spinStats.spins],
+                ["Wins", spinStats.wins],
+                ["Lose", spinStats.losses],
+                ["Try Again", spinStats.tryAgain],
+                ["Win Rate", `${spinStats.winRate}%`],
               ].map(([label, value]) => (
                 <div
                   key={label}

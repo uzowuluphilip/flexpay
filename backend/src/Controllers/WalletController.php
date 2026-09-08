@@ -138,6 +138,30 @@ final class WalletController
         ]);
     }
 
+    public function spinStats(Request $request): void
+    {
+        $user = $this->requireUser($request);
+        $stmt = $this->db->prepare(
+                'SELECT COUNT(*) AS spins,
+                    SUM(CASE WHEN outcome = "win" THEN 1 ELSE 0 END) AS wins,
+                    SUM(CASE WHEN outcome = "lose" THEN 1 ELSE 0 END) AS losses,
+                    SUM(CASE WHEN outcome = "try_again" THEN 1 ELSE 0 END) AS try_again
+                 FROM spins WHERE user_id = ?'
+        );
+        $stmt->execute([(int) $user['id']]);
+        $stats = $stmt->fetch() ?: [];
+        $spins = (int) ($stats['spins'] ?? 0);
+        $wins = (int) ($stats['wins'] ?? 0);
+
+        Response::success([
+            'spins' => $spins,
+            'wins' => $wins,
+            'losses' => (int) ($stats['losses'] ?? 0),
+            'tryAgain' => (int) ($stats['try_again'] ?? 0),
+            'winRate' => $spins > 0 ? round(($wins / $spins) * 100, 1) : 0,
+        ]);
+    }
+
     public function exchangeRate(Request $request): void
     {
         $cacheFile = dirname(__DIR__, 2) . '/cache/exchange-rate.json';

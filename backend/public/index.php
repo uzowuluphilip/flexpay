@@ -128,6 +128,7 @@ $router->add('GET', '/api/invest/locks', [WalletController::class, 'investLocks'
 $router->add('GET', '/api/tasks', [TasksController::class, 'index']);
 $router->add('POST', '/api/tasks/:id/verify', [TasksController::class, 'verifyTask']);
 $router->add('POST', '/api/spin/play', [WalletController::class, 'playSpin']);
+$router->add('GET', '/api/spin/stats', [WalletController::class, 'spinStats']);
 $router->add('POST', '/api/notifications/subscribe', [NotificationController::class, 'subscribe']);
 $router->add('POST', '/api/notifications/unsubscribe', [NotificationController::class, 'unsubscribe']);
 $router->add('GET', '/api/notifications', [NotificationController::class, 'list']);
